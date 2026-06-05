@@ -1,0 +1,128 @@
+"use client";
+
+import { useCart } from "@/contexts/CartContext";
+import { type Product } from "@/lib/products";
+import Link from "next/link";
+import { useState } from "react";
+
+export default function ProductCard({ product }: { product: Product }) {
+  const { addItem } = useCart();
+  const [hovered, setHovered] = useState(false);
+
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      size: product.sizes[0],
+    });
+  };
+
+  const collectionLabel = product.collection
+    .split("-")
+    .map((w) => w[0].toUpperCase() + w.slice(1))
+    .join(" ");
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <Link href={`/shop/${product.slug}`} className="block">
+        {/* Image area */}
+        <div
+          className="relative overflow-hidden mb-3"
+          style={{
+            aspectRatio: "3/4",
+            backgroundColor: "var(--surface)",
+            border: `1px solid ${hovered ? "var(--accent)" : "transparent"}`,
+            transition: "border-color 0.3s ease",
+          }}
+        >
+          {/* Radial glow */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: "radial-gradient(ellipse at center, rgba(200,169,110,0.06) 0%, transparent 70%)",
+            }}
+          />
+
+          {/* Name watermark */}
+          <div
+            className="absolute inset-0 flex items-center justify-center px-4 opacity-[0.07] pointer-events-none"
+            style={{ fontFamily: "var(--font-rajdhani)" }}
+          >
+            <span
+              className="text-3xl font-bold uppercase tracking-widest text-center leading-tight"
+              style={{ color: "var(--text)" }}
+            >
+              {product.name}
+            </span>
+          </div>
+
+          {/* Tag */}
+          {product.tag && (
+            <div
+              className="absolute top-3 left-3 z-10 px-2.5 py-0.5 text-[10px] tracking-widest uppercase"
+              style={{
+                backgroundColor: "var(--accent)",
+                color: "var(--bg)",
+                fontFamily: "var(--font-rajdhani)",
+                fontWeight: 700,
+              }}
+            >
+              {product.tag}
+            </div>
+          )}
+
+          {/* Quick Add — slides up from bottom */}
+          <div
+            className="absolute bottom-0 left-0 right-0 z-10 transition-transform duration-300"
+            style={{ transform: hovered ? "translateY(0)" : "translateY(100%)" }}
+          >
+            <button
+              onClick={handleQuickAdd}
+              className="w-full py-3 text-[11px] tracking-widest uppercase cursor-pointer transition-opacity hover:opacity-80"
+              style={{
+                backgroundColor: "var(--bg)",
+                color: "var(--text)",
+                fontFamily: "var(--font-rajdhani)",
+                fontWeight: 700,
+                letterSpacing: "0.2em",
+                border: "none",
+              }}
+            >
+              Quick Add — {product.sizes[0]}
+            </button>
+          </div>
+        </div>
+
+        {/* Caption */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h3
+              className="text-sm font-semibold uppercase tracking-wide leading-snug truncate"
+              style={{ fontFamily: "var(--font-rajdhani)", color: "var(--text)" }}
+            >
+              {product.name}
+            </h3>
+            <p
+              className="text-xs mt-0.5"
+              style={{ color: "var(--text-muted)", fontFamily: "var(--font-dm-sans)" }}
+            >
+              {product.category} · {collectionLabel}
+            </p>
+          </div>
+          <span
+            className="text-sm flex-shrink-0"
+            style={{ color: "var(--text)", fontFamily: "var(--font-dm-sans)", fontWeight: 500 }}
+          >
+            ${product.price}
+          </span>
+        </div>
+      </Link>
+    </div>
+  );
+}
