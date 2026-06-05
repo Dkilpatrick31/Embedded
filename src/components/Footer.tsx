@@ -154,7 +154,7 @@ export default function Footer() {
 
       {/* Bottom bar */}
       <div
-        className="max-w-screen-2xl mx-auto px-6 lg:px-12 py-6 flex flex-col md:flex-row items-center justify-between gap-4"
+        className="max-w-screen-2xl mx-auto px-6 lg:px-12 py-6 flex flex-col items-center gap-4 md:flex-row md:justify-between"
         style={{ borderTop: "1px solid var(--border)" }}
       >
         <span
@@ -164,7 +164,7 @@ export default function Footer() {
           © {new Date().getFullYear()} Embedded. All rights reserved.
         </span>
 
-        <div className="flex items-center gap-6">
+        <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
           {["Privacy Policy", "Terms of Service", "Cookie Preferences"].map(
             (item) => (
               <Link

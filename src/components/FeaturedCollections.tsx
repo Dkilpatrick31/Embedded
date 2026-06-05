@@ -58,7 +58,7 @@ function CollectionCard({ collection }: { collection: typeof collections[0] }) {
   const isWide = collection.aspectRatio === "landscape";
 
   return (
-    <motion.div variants={itemVariants} className={isWide ? "md:col-span-2" : ""}>
+    <motion.div variants={itemVariants} className={isWide ? "lg:col-span-2" : ""}>
       <Link href={`/collections/${collection.title.toLowerCase().replace(" ", "-")}`} className="group block">
         {/* Image area */}
         <div
@@ -161,7 +161,7 @@ export default function FeaturedCollections() {
   return (
     <section className="py-24 px-6 lg:px-12 max-w-screen-2xl mx-auto">
       {/* Section header */}
-      <div className="flex items-end justify-between mb-14">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 md:mb-14">
         <div>
           <p
             className="text-xs tracking-[0.3em] uppercase mb-3"
@@ -180,7 +180,7 @@ export default function FeaturedCollections() {
         </div>
         <Link
           href="/collections"
-          className="hidden md:inline-flex items-center gap-2 text-xs tracking-widest uppercase transition-opacity hover:opacity-60"
+          className="inline-flex items-center gap-2 text-xs tracking-widest uppercase transition-opacity hover:opacity-60 self-start md:self-auto"
           style={{
             color: "var(--text)",
             fontFamily: "var(--font-rajdhani)",
@@ -197,7 +197,7 @@ export default function FeaturedCollections() {
 
       {/* Grid */}
       <motion.div
-        className="grid grid-cols-1 md:grid-cols-3 gap-5"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"

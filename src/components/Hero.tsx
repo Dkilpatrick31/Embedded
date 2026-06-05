@@ -49,7 +49,7 @@ export default function Hero() {
       />
 
       {/* Content */}
-      <div className="relative z-10 w-full max-w-screen-2xl mx-auto px-6 lg:px-12 pb-20">
+      <div className="relative z-10 w-full max-w-screen-2xl mx-auto px-6 lg:px-12 pb-16 md:pb-20">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -64,7 +64,7 @@ export default function Hero() {
           </p>
 
           <h1
-            className="text-6xl lg:text-8xl font-bold uppercase leading-none mb-6"
+            className="text-5xl md:text-6xl lg:text-8xl font-bold uppercase leading-none mb-6"
             style={{ fontFamily: "var(--font-rajdhani)", color: "var(--text)" }}
           >
             Above
@@ -80,10 +80,10 @@ export default function Hero() {
             aviation heritage meets modern craft.
           </p>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3 md:gap-4">
             <Link
               href="/collections"
-              className="inline-block px-8 py-3.5 text-xs tracking-widest uppercase transition-opacity hover:opacity-80"
+              className="inline-block px-6 md:px-8 py-3.5 text-xs tracking-widest uppercase transition-opacity hover:opacity-80"
               style={{
                 backgroundColor: "var(--accent)",
                 color: "var(--bg)",
@@ -96,7 +96,7 @@ export default function Hero() {
             </Link>
             <Link
               href="/about"
-              className="inline-block px-8 py-3.5 text-xs tracking-widest uppercase transition-opacity hover:opacity-80"
+              className="inline-block px-6 md:px-8 py-3.5 text-xs tracking-widest uppercase transition-opacity hover:opacity-80"
               style={{
                 border: "1px solid var(--text)",
                 color: "var(--text)",
@@ -110,9 +110,9 @@ export default function Hero() {
           </div>
         </motion.div>
 
-        {/* Scroll indicator */}
+        {/* Scroll indicator — hidden on small screens to avoid overlap */}
         <motion.div
-          className="absolute right-12 bottom-20 flex flex-col items-center gap-2"
+          className="absolute right-6 md:right-12 bottom-16 md:bottom-20 hidden sm:flex flex-col items-center gap-2"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.2, duration: 0.6 }}

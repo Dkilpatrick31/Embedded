@@ -13,6 +13,25 @@ const navLinks = [
   { label: "About", href: "/about" },
 ];
 
+function HamburgerIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <line x1="3" y1="12" x2="21" y2="12" />
+      <line x1="3" y1="18" x2="21" y2="18" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
 function SearchIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -68,109 +87,188 @@ function MoonIcon() {
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const [cartCount] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const logoSrc =
     theme === "dark" ? "/logo-dark.svg" : "/logo-light.svg";
 
   return (
-    <header
-      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md"
-      style={{ backgroundColor: "var(--nav-bg)", borderBottom: "1px solid var(--border)" }}
-    >
-      <nav className="max-w-screen-2xl mx-auto px-6 lg:px-12 h-16 flex items-center">
-        {/* Left — nav links */}
-        <div className="flex-1 flex items-center gap-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className="text-xs tracking-widest uppercase transition-opacity hover:opacity-60"
-              style={{ color: "var(--text)", fontFamily: "var(--font-rajdhani)", fontWeight: 600, letterSpacing: "0.15em" }}
+    <>
+      <header
+        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md"
+        style={{ backgroundColor: "var(--nav-bg)", borderBottom: "1px solid var(--border)" }}
+      >
+        <nav className="max-w-screen-2xl mx-auto px-6 lg:px-12 h-16 flex items-center">
+          {/* Left — hamburger (mobile) or nav links (desktop) */}
+          <div className="flex-1 flex items-center gap-8">
+            <button
+              className="md:hidden opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+              onClick={() => setMobileMenuOpen((o) => !o)}
+              aria-label="Toggle menu"
+              aria-expanded={mobileMenuOpen}
+              style={{ color: "var(--text)" }}
             >
-              {link.label}
+              {mobileMenuOpen ? <CloseIcon /> : <HamburgerIcon />}
+            </button>
+
+            {navLinks.map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="hidden md:block text-xs tracking-widest uppercase transition-opacity hover:opacity-60"
+                style={{ color: "var(--text)", fontFamily: "var(--font-rajdhani)", fontWeight: 600, letterSpacing: "0.15em" }}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+
+          {/* Center — logo */}
+          <div className="flex-shrink-0 px-4 md:px-8">
+            <Link href="/" aria-label="Embedded home">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={logoSrc}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                >
+                  <Image
+                    src={logoSrc}
+                    alt="Embedded"
+                    width={160}
+                    height={32}
+                    priority
+                    className="h-7 md:h-8 w-auto"
+                  />
+                </motion.div>
+              </AnimatePresence>
             </Link>
-          ))}
-        </div>
+          </div>
 
-        {/* Center — logo */}
-        <div className="flex-shrink-0 px-8">
-          <Link href="/" aria-label="Embedded home">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={logoSrc}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25, ease: "easeInOut" }}
-              >
-                <Image
-                  src={logoSrc}
-                  alt="Embedded"
-                  width={160}
-                  height={32}
-                  priority
-                  className="h-8 w-auto"
-                />
-              </motion.div>
-            </AnimatePresence>
-          </Link>
-        </div>
+          {/* Right — icons */}
+          <div className="flex-1 flex items-center justify-end gap-4 md:gap-5">
+            <button
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+              className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+              style={{ color: "var(--text)" }}
+            >
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={theme}
+                  initial={{ opacity: 0, rotate: -30 }}
+                  animate={{ opacity: 1, rotate: 0 }}
+                  exit={{ opacity: 0, rotate: 30 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex"
+                >
+                  {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+                </motion.span>
+              </AnimatePresence>
+            </button>
 
-        {/* Right — icons */}
-        <div className="flex-1 flex items-center justify-end gap-5">
-          <button
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-            className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
-            style={{ color: "var(--text)" }}
-          >
-            <AnimatePresence mode="wait">
-              <motion.span
-                key={theme}
-                initial={{ opacity: 0, rotate: -30 }}
-                animate={{ opacity: 1, rotate: 0 }}
-                exit={{ opacity: 0, rotate: 30 }}
-                transition={{ duration: 0.2 }}
-                className="flex"
-              >
-                {theme === "dark" ? <SunIcon /> : <MoonIcon />}
-              </motion.span>
-            </AnimatePresence>
-          </button>
+            <button
+              aria-label="Search"
+              className="hidden md:block opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+              style={{ color: "var(--text)" }}
+            >
+              <SearchIcon />
+            </button>
 
-          <button
-            aria-label="Search"
-            className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
-            style={{ color: "var(--text)" }}
-          >
-            <SearchIcon />
-          </button>
+            <button
+              aria-label="Account"
+              className="hidden md:block opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+              style={{ color: "var(--text)" }}
+            >
+              <AccountIcon />
+            </button>
 
-          <button
-            aria-label="Account"
-            className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
-            style={{ color: "var(--text)" }}
-          >
-            <AccountIcon />
-          </button>
+            <button
+              aria-label={`Cart (${cartCount})`}
+              className="relative opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+              style={{ color: "var(--text)" }}
+            >
+              <CartIcon />
+              {cartCount > 0 && (
+                <span
+                  className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full text-[10px] flex items-center justify-center"
+                  style={{ backgroundColor: "var(--accent)", color: "var(--bg)" }}
+                >
+                  {cartCount}
+                </span>
+              )}
+            </button>
+          </div>
+        </nav>
+      </header>
 
-          <button
-            aria-label={`Cart (${cartCount})`}
-            className="relative opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
-            style={{ color: "var(--text)" }}
-          >
-            <CartIcon />
-            {cartCount > 0 && (
-              <span
-                className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full text-[10px] flex items-center justify-center"
-                style={{ backgroundColor: "var(--accent)", color: "var(--bg)" }}
-              >
-                {cartCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </nav>
-    </header>
+      {/* Mobile menu drawer */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              className="fixed inset-0 z-40 md:hidden"
+              style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setMobileMenuOpen(false)}
+            />
+
+            {/* Menu panel */}
+            <motion.div
+              className="fixed top-16 left-0 right-0 z-40 md:hidden"
+              style={{
+                backgroundColor: "var(--nav-bg)",
+                borderBottom: "1px solid var(--border)",
+                backdropFilter: "blur(12px)",
+              }}
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+            >
+              <nav className="px-6 py-8 flex flex-col gap-6">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-base tracking-widest uppercase transition-opacity hover:opacity-60"
+                    style={{ color: "var(--text)", fontFamily: "var(--font-rajdhani)", fontWeight: 600, letterSpacing: "0.15em" }}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+
+                <div
+                  className="pt-5 flex items-center gap-5"
+                  style={{ borderTop: "1px solid var(--border)" }}
+                >
+                  <button
+                    aria-label="Search"
+                    className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+                    style={{ color: "var(--text)" }}
+                  >
+                    <SearchIcon />
+                  </button>
+                  <button
+                    aria-label="Account"
+                    className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+                    style={{ color: "var(--text)" }}
+                  >
+                    <AccountIcon />
+                  </button>
+                </div>
+              </nav>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
