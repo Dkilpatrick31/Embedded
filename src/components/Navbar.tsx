@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "@/contexts/ThemeContext";
+import { useCart } from "@/contexts/CartContext";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -86,7 +87,7 @@ function MoonIcon() {
 
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
-  const [cartCount] = useState(0);
+  const { totalItems } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const logoSrc =
@@ -186,19 +187,26 @@ export default function Navbar() {
             </button>
 
             <button
-              aria-label={`Cart (${cartCount})`}
+              aria-label={`Cart (${totalItems})`}
               className="relative opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
               style={{ color: "var(--text)" }}
             >
               <CartIcon />
-              {cartCount > 0 && (
-                <span
-                  className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full text-[10px] flex items-center justify-center"
-                  style={{ backgroundColor: "var(--accent)", color: "var(--bg)" }}
-                >
-                  {cartCount}
-                </span>
-              )}
+              <AnimatePresence>
+                {totalItems > 0 && (
+                  <motion.span
+                    key={totalItems}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 20 }}
+                    className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full text-[10px] flex items-center justify-center"
+                    style={{ backgroundColor: "var(--accent)", color: "var(--bg)", fontFamily: "var(--font-rajdhani)", fontWeight: 700 }}
+                  >
+                    {totalItems}
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </button>
           </div>
         </nav>

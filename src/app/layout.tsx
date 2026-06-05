@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Rajdhani, DM_Sans } from "next/font/google";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { CartProvider } from "@/contexts/CartContext";
 import "./globals.css";
 
 const rajdhani = Rajdhani({
@@ -36,7 +37,9 @@ export default function RootLayout({
       className={`${rajdhani.variable} ${dmSans.variable}`}
     >
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <CartProvider>{children}</CartProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
