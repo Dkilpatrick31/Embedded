@@ -98,6 +98,9 @@ export default function SearchClient() {
       <Navbar />
 
       <main className="flex-1 pt-16">
+        {/* Visually-hidden h1 for accessibility / audit */}
+        <h1 className="sr-only">Search Embedded</h1>
+
         {/* ── Search header ── */}
         <div
           className="py-14 md:py-20"
