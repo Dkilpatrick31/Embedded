@@ -134,7 +134,7 @@ export default function Navbar() {
   // Clean up timer on unmount
   useEffect(() => () => clearCloseTimer(), [clearCloseTimer]);
 
-  const logoSrc = theme === "dark" ? "/logo-dark.png" : "/logo-light.png";
+  const logoFilter = theme === "light" ? "invert(1)" : "none";
 
   return (
     <>
@@ -205,19 +205,20 @@ export default function Navbar() {
             <Link href="/" aria-label="Embedded home" onClick={closeMenu}>
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={logoSrc}
+                  key={theme}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.25, ease: "easeInOut" }}
                 >
                   <Image
-                    src={logoSrc}
+                    src="/Embedded-Logo.jpeg"
                     alt="Embedded"
-                    width={240}
-                    height={48}
+                    width={1254}
+                    height={1254}
                     priority
-                    className="h-10 md:h-12 w-auto"
+                    className="h-11 md:h-14 w-auto"
+                    style={{ filter: logoFilter }}
                   />
                 </motion.div>
               </AnimatePresence>
