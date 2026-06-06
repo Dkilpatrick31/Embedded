@@ -246,13 +246,14 @@ export default function Navbar() {
               </AnimatePresence>
             </button>
 
-            <button
+            <Link
+              href="/search"
               aria-label="Search"
-              className="hidden md:block opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+              className="hidden md:flex opacity-70 hover:opacity-100 transition-opacity"
               style={{ color: "var(--text)" }}
             >
               <SearchIcon />
-            </button>
+            </Link>
 
             <button
               aria-label="Account"
@@ -344,13 +345,14 @@ export default function Navbar() {
                   className="pt-5 flex items-center gap-5"
                   style={{ borderTop: "1px solid var(--border)" }}
                 >
-                  <button
+                  <Link
+                    href="/search"
                     aria-label="Search"
-                    className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+                    className="opacity-70 hover:opacity-100 transition-opacity flex"
                     style={{ color: "var(--text)" }}
                   >
                     <SearchIcon />
-                  </button>
+                  </Link>
                   <button
                     aria-label="Account"
                     className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
