@@ -221,14 +221,14 @@ export default function Hero() {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full h-screen min-h-[600px] flex items-end overflow-hidden"
+      className="relative w-full h-[calc(100svh-52px)] min-h-[560px] md:h-screen flex items-end overflow-hidden"
       style={{ backgroundColor: "#000000" }}
     >
       {/* Layer 2: Lightning canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
 
       {/* Layer 3: Logo — screen blend makes black pixels invisible */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none" style={{ transform: "translateY(-140px)" }}>
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none -translate-y-[60px] md:-translate-y-[140px]">
         <Image
           src="/Embedded-Logo.jpeg"
           alt=""
@@ -257,7 +257,7 @@ export default function Hero() {
       />
 
       {/* Layer 5: Content */}
-      <div className="relative z-10 w-full max-w-screen-2xl mx-auto px-6 lg:px-12 pb-16 md:pb-20">
+      <div className="relative z-10 w-full max-w-screen-2xl mx-auto px-6 lg:px-12 pb-6 md:pb-20">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -265,14 +265,14 @@ export default function Hero() {
           className="max-w-2xl"
         >
           <p
-            className="text-xs tracking-[0.3em] uppercase mb-4"
+            className="text-xs tracking-[0.3em] uppercase mb-2 md:mb-4"
             style={{ color: "var(--accent)", fontFamily: "var(--font-rajdhani)" }}
           >
             Spring / Summer 2025 Collection
           </p>
 
           <h1
-            className="text-5xl md:text-6xl lg:text-8xl font-bold uppercase leading-none mb-6"
+            className="text-5xl md:text-6xl lg:text-8xl font-bold uppercase leading-none mb-3 md:mb-6"
             style={{ fontFamily: "var(--font-rajdhani)", color: "#ffffff" }}
           >
             Above
@@ -281,7 +281,7 @@ export default function Hero() {
           </h1>
 
           <p
-            className="text-sm leading-relaxed mb-8 max-w-md"
+            className="text-sm leading-relaxed mb-4 md:mb-8 max-w-md"
             style={{ color: "rgba(255,255,255,0.55)", fontFamily: "var(--font-dm-sans)" }}
           >
             Precision-engineered garments for the cockpit and beyond. Where
@@ -320,7 +320,7 @@ export default function Hero() {
 
         {/* Scroll indicator */}
         <motion.div
-          className="absolute right-6 md:right-12 bottom-16 md:bottom-20 hidden sm:flex flex-col items-center gap-2"
+          className="absolute right-6 md:right-12 bottom-8 md:bottom-20 hidden sm:flex flex-col items-center gap-2"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.2, duration: 0.6 }}
