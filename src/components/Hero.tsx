@@ -228,13 +228,13 @@ export default function Hero() {
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
 
       {/* Layer 3: Logo — screen blend makes black pixels invisible */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none" style={{ transform: "translateY(-80px)" }}>
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none" style={{ transform: "translateY(-140px)" }}>
         <Image
           src="/Embedded-Logo.jpeg"
           alt=""
           width={1254}
           height={1254}
-          className="w-[340px] md:w-[700px] h-auto"
+          className="w-[425px] md:w-[875px] h-auto"
           style={{ opacity: 0.5, mixBlendMode: "screen" }}
           priority
         />

@@ -7,7 +7,6 @@ import { useCart } from "@/contexts/CartContext";
 import { useCartDrawer } from "@/contexts/CartDrawerContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
 import Link from "next/link";
 import MegaMenuPanel from "@/components/MegaMenu";
 
@@ -145,8 +144,6 @@ export default function Navbar() {
   // Clean up timer on unmount
   useEffect(() => () => clearCloseTimer(), [clearCloseTimer]);
 
-  const logoFilter = theme === "light" ? "invert(1)" : "none";
-
   return (
     <>
       {/* ── Mega menu backdrop (below z-50 header) ── */}
@@ -211,28 +208,15 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Center — logo */}
+          {/* Center — wordmark */}
           <div className="flex-shrink-0 px-4 md:px-8">
-            <Link href="/" aria-label="Embedded home" onClick={closeMenu}>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={theme}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.25, ease: "easeInOut" }}
-                >
-                  <Image
-                    src="/Embedded-Logo.jpeg"
-                    alt="Embedded"
-                    width={1254}
-                    height={1254}
-                    priority
-                    className="h-11 md:h-14 w-auto"
-                    style={{ filter: logoFilter }}
-                  />
-                </motion.div>
-              </AnimatePresence>
+            <Link href="/" onClick={closeMenu}>
+              <span
+                className="text-xl md:text-2xl font-bold tracking-widest uppercase"
+                style={{ fontFamily: "var(--font-rajdhani)", color: "var(--text)" }}
+              >
+                EMBEDDED
+              </span>
             </Link>
           </div>
 
