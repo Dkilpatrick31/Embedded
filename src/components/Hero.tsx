@@ -82,7 +82,7 @@ export default function Hero() {
 
           <div className="flex flex-wrap items-center gap-3 md:gap-4">
             <Link
-              href="/collections"
+              href="/shop"
               className="inline-block px-6 md:px-8 py-3.5 text-xs tracking-widest uppercase transition-opacity hover:opacity-80"
               style={{
                 backgroundColor: "var(--accent)",

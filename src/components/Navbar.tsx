@@ -8,9 +8,9 @@ import Link from "next/link";
 import { useState } from "react";
 
 const navLinks = [
-  { label: "Men", href: "/men" },
-  { label: "Women", href: "/women" },
-  { label: "Gear", href: "/gear" },
+  { label: "Men",   href: "/shop?category=Men" },
+  { label: "Women", href: "/shop?category=Women" },
+  { label: "Gear",  href: "/shop?category=Gear" },
   { label: "About", href: "/about" },
 ];
 

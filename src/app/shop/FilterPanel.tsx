@@ -54,6 +54,7 @@ interface FilterPanelProps {
   onToggle: (key: "category" | "collection" | "size", value: string) => void;
   onPriceSelect: (value: string | null) => void;
   onClearAll: () => void;
+  showCollections?: boolean;
 }
 
 export default function FilterPanel({
@@ -65,6 +66,7 @@ export default function FilterPanel({
   onToggle,
   onPriceSelect,
   onClearAll,
+  showCollections = true,
 }: FilterPanelProps) {
   return (
     <div>
@@ -130,7 +132,7 @@ export default function FilterPanel({
       </Section>
 
       {/* Collection */}
-      <Section title="Collection">
+      {showCollections && <Section title="Collection">
         <div className="flex flex-col gap-2.5">
           {COLLECTIONS.map((col) => {
             const active = selectedCollections.includes(col.id);
@@ -169,7 +171,7 @@ export default function FilterPanel({
             );
           })}
         </div>
-      </Section>
+      </Section>}
 
       {/* Size */}
       <Section title="Size">
