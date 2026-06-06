@@ -17,20 +17,19 @@ const footerColumns = [
   {
     heading: "Company",
     links: [
-      { label: "About",          href: "/about" },
-      { label: "Careers",        href: "/about" },
-      { label: "Press",          href: "/about" },
-      { label: "Sustainability",  href: "/about" },
+      { label: "About",         href: "/about" },
+      { label: "Careers",       href: "/careers" },
+      { label: "Press",         href: "/contact" },
+      { label: "Sustainability", href: "/about" },
     ],
   },
   {
     heading: "Support",
     links: [
-      { label: "Size Guide",        href: "/shop" },
-      { label: "Shipping & Returns", href: "/shop" },
-      { label: "Care Instructions",  href: "/shop" },
-      { label: "Contact",           href: "/about" },
-      { label: "FAQ",               href: "/shop" },
+      { label: "Size Guide",         href: "/size-guide" },
+      { label: "Shipping & Returns", href: "/shipping" },
+      { label: "Contact",            href: "/contact" },
+      { label: "FAQ",                href: "/faq" },
     ],
   },
 ];
@@ -165,18 +164,19 @@ export default function Footer() {
         </span>
 
         <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
-          {["Privacy Policy", "Terms of Service", "Cookie Preferences"].map(
-            (item) => (
-              <Link
-                key={item}
-                href="#"
-                className="text-xs opacity-40 hover:opacity-70 transition-opacity"
-                style={{ color: "var(--text)", fontFamily: "var(--font-dm-sans)" }}
-              >
-                {item}
-              </Link>
-            )
-          )}
+          {[
+            { label: "Privacy Policy",    href: "/privacy-policy" },
+            { label: "Terms of Service",  href: "/terms" },
+          ].map(({ label, href }) => (
+            <Link
+              key={label}
+              href={href}
+              className="text-xs opacity-40 hover:opacity-70 transition-opacity"
+              style={{ color: "var(--text)", fontFamily: "var(--font-dm-sans)" }}
+            >
+              {label}
+            </Link>
+          ))}
         </div>
 
         {/* Social icons */}
