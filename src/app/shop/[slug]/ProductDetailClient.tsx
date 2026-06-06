@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
+import { useCartDrawer } from "@/contexts/CartDrawerContext";
 import { type Product, products, COLLECTIONS } from "@/lib/products";
 import ProductCard from "@/app/shop/ProductCard";
 
@@ -205,6 +206,7 @@ function getProductDetails(product: Product) {
 
 export default function ProductDetailClient({ product }: { product: Product }) {
   const { addItem } = useCart();
+  const { openDrawer } = useCartDrawer();
 
   const [selectedView, setSelectedView] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -224,6 +226,7 @@ export default function ProductDetailClient({ product }: { product: Product }) {
     addItem({ id: product.id, name: product.name, price: product.price, size: selectedSize });
     setAdded(true);
     setTimeout(() => setAdded(false), 2200);
+    openDrawer();
   };
 
   const handleSizeSelect = (size: string) => {

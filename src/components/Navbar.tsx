@@ -2,6 +2,7 @@
 
 import { useTheme } from "@/contexts/ThemeContext";
 import { useCart } from "@/contexts/CartContext";
+import { useCartDrawer } from "@/contexts/CartDrawerContext";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -88,10 +89,11 @@ function MoonIcon() {
 export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { totalItems } = useCart();
+  const { openDrawer } = useCartDrawer();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const logoSrc =
-    theme === "dark" ? "/logo-dark.svg" : "/logo-light.svg";
+    theme === "dark" ? "/logo-dark.png" : "/logo-light.png";
 
   return (
     <>
@@ -138,10 +140,10 @@ export default function Navbar() {
                   <Image
                     src={logoSrc}
                     alt="Embedded"
-                    width={160}
-                    height={32}
+                    width={240}
+                    height={48}
                     priority
-                    className="h-7 md:h-8 w-auto"
+                    className="h-10 md:h-12 w-auto"
                   />
                 </motion.div>
               </AnimatePresence>
@@ -186,10 +188,10 @@ export default function Navbar() {
               <AccountIcon />
             </button>
 
-            <Link
-              href="/cart"
+            <button
+              onClick={openDrawer}
               aria-label={`Cart (${totalItems})`}
-              className="relative opacity-70 hover:opacity-100 transition-opacity"
+              className="relative opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
               style={{ color: "var(--text)" }}
             >
               <CartIcon />
@@ -208,7 +210,7 @@ export default function Navbar() {
                   </motion.span>
                 )}
               </AnimatePresence>
-            </Link>
+            </button>
           </div>
         </nav>
       </header>
