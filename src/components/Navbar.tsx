@@ -1,18 +1,20 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useCart } from "@/contexts/CartContext";
 import { useCartDrawer } from "@/contexts/CartDrawerContext";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import MegaMenuPanel from "@/components/MegaMenu";
 
 const navLinks = [
-  { label: "Men",   href: "/shop?category=Men" },
-  { label: "Women", href: "/shop?category=Women" },
-  { label: "Gear",  href: "/shop?category=Gear" },
-  { label: "About", href: "/about" },
+  { label: "Men",   href: "/shop?category=Men",   hasMegaMenu: true },
+  { label: "Women", href: "/shop?category=Women",  hasMegaMenu: true },
+  { label: "Gear",  href: "/shop?category=Gear",   hasMegaMenu: true },
+  { label: "About", href: "/about",                hasMegaMenu: false },
 ];
 
 function HamburgerIcon() {
@@ -90,13 +92,67 @@ export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { totalItems } = useCart();
   const { openDrawer } = useCartDrawer();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
-  const logoSrc =
-    theme === "dark" ? "/logo-dark.png" : "/logo-light.png";
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // panelOpen drives the AnimatePresence (open/close animation)
+  // activeMenu tracks which menu's content to show (persists through close animation)
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [activeMenu, setActiveMenu] = useState("Men");
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Close both menus on route change
+  useEffect(() => {
+    setPanelOpen(false);
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  const clearCloseTimer = useCallback(() => {
+    if (closeTimerRef.current !== null) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  }, []);
+
+  // 150ms delay prevents flicker when cursor travels from nav link to panel
+  const scheduleClose = useCallback(() => {
+    clearCloseTimer();
+    closeTimerRef.current = setTimeout(() => setPanelOpen(false), 150);
+  }, [clearCloseTimer]);
+
+  const openMenu = useCallback((id: string) => {
+    clearCloseTimer();
+    setActiveMenu(id);
+    setPanelOpen(true);
+  }, [clearCloseTimer]);
+
+  const closeMenu = useCallback(() => {
+    clearCloseTimer();
+    setPanelOpen(false);
+  }, [clearCloseTimer]);
+
+  // Clean up timer on unmount
+  useEffect(() => () => clearCloseTimer(), [clearCloseTimer]);
+
+  const logoSrc = theme === "dark" ? "/logo-dark.png" : "/logo-light.png";
 
   return (
     <>
+      {/* ── Mega menu backdrop (below z-50 header) ── */}
+      <AnimatePresence>
+        {panelOpen && (
+          <motion.div
+            className="fixed inset-0 z-40 hidden md:block"
+            style={{ top: "64px", backgroundColor: "rgba(0,0,0,0.25)" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={closeMenu}
+          />
+        )}
+      </AnimatePresence>
+
       <header
         className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md"
         style={{ backgroundColor: "var(--nav-bg)", borderBottom: "1px solid var(--border)" }}
@@ -118,17 +174,35 @@ export default function Navbar() {
               <Link
                 key={link.label}
                 href={link.href}
-                className="hidden md:block text-xs tracking-widest uppercase transition-opacity hover:opacity-60"
-                style={{ color: "var(--text)", fontFamily: "var(--font-rajdhani)", fontWeight: 600, letterSpacing: "0.15em" }}
+                className="hidden md:block text-xs tracking-widest uppercase transition-opacity"
+                style={{
+                  color: "var(--text)",
+                  fontFamily: "var(--font-rajdhani)",
+                  fontWeight: 600,
+                  letterSpacing: "0.15em",
+                  opacity: panelOpen && activeMenu === link.label ? 1 : 0.7,
+                  transition: "opacity 0.15s ease",
+                }}
+                onMouseEnter={() => link.hasMegaMenu ? openMenu(link.label) : scheduleClose()}
+                onMouseLeave={link.hasMegaMenu ? scheduleClose : undefined}
               >
                 {link.label}
+                {/* Active underline indicator */}
+                {link.hasMegaMenu && panelOpen && activeMenu === link.label && (
+                  <motion.span
+                    layoutId="nav-active-bar"
+                    className="block h-px w-full mt-px"
+                    style={{ backgroundColor: "var(--accent)" }}
+                    transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                  />
+                )}
               </Link>
             ))}
           </div>
 
           {/* Center — logo */}
           <div className="flex-shrink-0 px-4 md:px-8">
-            <Link href="/" aria-label="Embedded home">
+            <Link href="/" aria-label="Embedded home" onClick={closeMenu}>
               <AnimatePresence mode="wait">
                 <motion.div
                   key={logoSrc}
@@ -213,13 +287,24 @@ export default function Navbar() {
             </button>
           </div>
         </nav>
+
+        {/* ── Mega menu panel (desktop only, absolute inside header) ── */}
+        <AnimatePresence>
+          {panelOpen && (
+            <MegaMenuPanel
+              activeMenu={activeMenu}
+              onMouseEnter={clearCloseTimer}
+              onMouseLeave={scheduleClose}
+              onClose={closeMenu}
+            />
+          )}
+        </AnimatePresence>
       </header>
 
-      {/* Mobile menu drawer */}
+      {/* ── Mobile menu drawer ── */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <>
-            {/* Backdrop */}
             <motion.div
               className="fixed inset-0 z-40 md:hidden"
               style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
@@ -230,7 +315,6 @@ export default function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
             />
 
-            {/* Menu panel */}
             <motion.div
               className="fixed top-16 left-0 right-0 z-40 md:hidden"
               style={{
