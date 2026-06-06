@@ -3,6 +3,7 @@ import { Rajdhani, DM_Sans } from "next/font/google";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { CartDrawerProvider } from "@/contexts/CartDrawerContext";
+import { WishlistProvider } from "@/contexts/WishlistContext";
 import CartDrawer from "@/components/CartDrawer";
 import PageTransition from "@/components/PageTransition";
 import "./globals.css";
@@ -42,10 +43,12 @@ export default function RootLayout({
       <body>
         <ThemeProvider>
           <CartProvider>
-            <CartDrawerProvider>
-              <PageTransition>{children}</PageTransition>
-              <CartDrawer />
-            </CartDrawerProvider>
+            <WishlistProvider>
+              <CartDrawerProvider>
+                <PageTransition>{children}</PageTransition>
+                <CartDrawer />
+              </CartDrawerProvider>
+            </WishlistProvider>
           </CartProvider>
         </ThemeProvider>
       </body>

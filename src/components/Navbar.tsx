@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useCart } from "@/contexts/CartContext";
 import { useCartDrawer } from "@/contexts/CartDrawerContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -32,6 +33,14 @@ function CloseIcon() {
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
+function HeartIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
     </svg>
   );
 }
@@ -92,6 +101,8 @@ export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { totalItems } = useCart();
   const { openDrawer } = useCartDrawer();
+  const { items: wishlistItems } = useWishlist();
+  const wishlistCount = wishlistItems.length;
   const pathname = usePathname();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -264,6 +275,30 @@ export default function Navbar() {
               <AccountIcon />
             </button>
 
+            <Link
+              href="/wishlist"
+              aria-label={`Wishlist (${wishlistCount})`}
+              className="hidden md:flex relative opacity-70 hover:opacity-100 transition-opacity"
+              style={{ color: "var(--text)" }}
+            >
+              <HeartIcon />
+              <AnimatePresence>
+                {wishlistCount > 0 && (
+                  <motion.span
+                    key={wishlistCount}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 20 }}
+                    className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full text-[10px] flex items-center justify-center"
+                    style={{ backgroundColor: "var(--accent)", color: "var(--bg)", fontFamily: "var(--font-rajdhani)", fontWeight: 700 }}
+                  >
+                    {wishlistCount}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </Link>
+
             <button
               onClick={openDrawer}
               aria-label={`Cart (${totalItems})`}
@@ -353,6 +388,22 @@ export default function Navbar() {
                     style={{ color: "var(--text)" }}
                   >
                     <SearchIcon />
+                  </Link>
+                  <Link
+                    href="/wishlist"
+                    aria-label="Wishlist"
+                    className="relative opacity-70 hover:opacity-100 transition-opacity flex"
+                    style={{ color: "var(--text)" }}
+                  >
+                    <HeartIcon />
+                    {wishlistCount > 0 && (
+                      <span
+                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full text-[10px] flex items-center justify-center"
+                        style={{ backgroundColor: "var(--accent)", color: "var(--bg)", fontFamily: "var(--font-rajdhani)", fontWeight: 700 }}
+                      >
+                        {wishlistCount}
+                      </span>
+                    )}
                   </Link>
                   <button
                     aria-label="Account"

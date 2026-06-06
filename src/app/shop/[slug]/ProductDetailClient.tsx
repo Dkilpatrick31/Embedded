@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
 import { useCartDrawer } from "@/contexts/CartDrawerContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import { type Product, products, COLLECTIONS } from "@/lib/products";
 import ProductCard from "@/app/shop/ProductCard";
 
@@ -204,15 +205,31 @@ function getProductDetails(product: Product) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
+function HeartIcon({ filled }: { filled: boolean }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" strokeWidth="1.5"
+      fill={filled ? "currentColor" : "none"} stroke="currentColor">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </svg>
+  );
+}
+
 export default function ProductDetailClient({ product }: { product: Product }) {
   const { addItem } = useCart();
   const { openDrawer } = useCartDrawer();
+  const { toggleItem, isWishlisted } = useWishlist();
 
   const [selectedView, setSelectedView] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [sizeError, setSizeError] = useState(false);
   const [added, setAdded] = useState(false);
   const [sizeModalOpen, setSizeModalOpen] = useState(false);
+
+  const wishlisted = isWishlisted(product.id);
+  const handleWishlist = () => toggleItem({
+    id: product.id, name: product.name, slug: product.slug,
+    price: product.price, category: product.category,
+  });
 
   const collectionLabel =
     COLLECTIONS.find((c) => c.id === product.collection)?.label ?? product.collection;
@@ -478,33 +495,65 @@ export default function ProductDetailClient({ product }: { product: Product }) {
               </AnimatePresence>
             </div>
 
-            {/* Add to Bag */}
-            <button
-              onClick={handleAdd}
-              className="w-full py-4 text-xs tracking-widest uppercase cursor-pointer overflow-hidden relative"
-              style={{
-                backgroundColor: added ? "transparent" : "var(--accent)",
-                border: added ? "1px solid var(--accent)" : "1px solid transparent",
-                color: added ? "var(--accent)" : "var(--bg)",
-                fontFamily: "var(--font-rajdhani)",
-                fontWeight: 700,
-                letterSpacing: "0.2em",
-                transition: "background-color 0.25s, color 0.25s, border-color 0.25s",
-              }}
-            >
-              <AnimatePresence mode="wait">
-                <motion.span
-                  key={added ? "added" : "default"}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.15 }}
-                  className="flex items-center justify-center gap-2"
-                >
-                  {added ? "Added ✓" : "Add to Bag"}
-                </motion.span>
-              </AnimatePresence>
-            </button>
+            {/* Add to Bag + Wishlist row */}
+            <div className="flex gap-3">
+              <button
+                onClick={handleAdd}
+                className="flex-1 py-4 text-xs tracking-widest uppercase cursor-pointer overflow-hidden relative"
+                style={{
+                  backgroundColor: added ? "transparent" : "var(--accent)",
+                  border: added ? "1px solid var(--accent)" : "1px solid transparent",
+                  color: added ? "var(--accent)" : "var(--bg)",
+                  fontFamily: "var(--font-rajdhani)",
+                  fontWeight: 700,
+                  letterSpacing: "0.2em",
+                  transition: "background-color 0.25s, color 0.25s, border-color 0.25s",
+                }}
+              >
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={added ? "added" : "default"}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex items-center justify-center gap-2"
+                  >
+                    {added ? "Added ✓" : "Add to Bag"}
+                  </motion.span>
+                </AnimatePresence>
+              </button>
+
+              <motion.button
+                onClick={handleWishlist}
+                whileTap={{ scale: 0.88 }}
+                aria-label={wishlisted ? "Remove from wishlist" : "Save to wishlist"}
+                className="flex-shrink-0 px-4 flex items-center gap-2 text-xs tracking-widest uppercase cursor-pointer transition-colors"
+                style={{
+                  border: `1px solid ${wishlisted ? "var(--accent)" : "var(--border)"}`,
+                  color: wishlisted ? "var(--accent)" : "var(--text)",
+                  fontFamily: "var(--font-rajdhani)",
+                  fontWeight: 700,
+                  letterSpacing: "0.12em",
+                }}
+              >
+                <HeartIcon filled={wishlisted} />
+                <AnimatePresence mode="wait">
+                  {wishlisted && (
+                    <motion.span
+                      key="wishlisted"
+                      initial={{ opacity: 0, width: 0 }}
+                      animate={{ opacity: 1, width: "auto" }}
+                      exit={{ opacity: 0, width: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden whitespace-nowrap"
+                    >
+                      Wishlisted
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            </div>
 
             {/* Accordion sections */}
             <div className="mt-6">
