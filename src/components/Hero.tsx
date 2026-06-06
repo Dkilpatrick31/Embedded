@@ -72,11 +72,11 @@ function buildBolt(
   }
 }
 
-// ── Bolt tree factory: 2-4 trunks fired simultaneously ────────────────────────
+// ── Bolt tree factory: 1-2 trunks fired simultaneously ────────────────────────
 
 function makeTree(w: number, h: number, now: number): BoltTree {
   const segs: Seg[] = [];
-  const trunks = 2 + Math.floor(Math.random() * 3);
+  const trunks = 1 + Math.floor(Math.random() * 2);
   for (let i = 0; i < trunks; i++) {
     const sx = w * (0.08 + Math.random() * 0.84);
     const ex = Math.max(0, Math.min(w, sx + (Math.random() - 0.5) * w * 0.35));
@@ -174,9 +174,9 @@ export default function Hero() {
       flicker();
     };
 
-    // ── Schedule: 1.5–4 seconds between strikes ───────────────────────────────
+    // ── Schedule: 4–9 seconds between strikes ────────────────────────────────
     const schedule = () => {
-      const delay = 1500 + Math.random() * 2500;
+      const delay = 4000 + Math.random() * 5000;
       const t = setTimeout(() => {
         if (!mounted) return;
         strike();
@@ -228,7 +228,7 @@ export default function Hero() {
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
 
       {/* Layer 3: Logo — screen blend makes black pixels invisible */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none" style={{ transform: "translateY(-80px)" }}>
         <Image
           src="/Embedded-Logo.jpeg"
           alt=""
