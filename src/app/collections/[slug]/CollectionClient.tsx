@@ -226,7 +226,7 @@ export default function CollectionClient({ slug }: { slug: string }) {
             <nav className="flex items-center gap-2 mb-5">
               {[
                 { label: "Home", href: "/" },
-                { label: "Collections", href: "/shop" },
+                { label: "Shop", href: "/shop" },
                 { label: info.label, href: null },
               ].map((crumb, i, arr) => (
                 <span key={crumb.label} className="flex items-center gap-2">
