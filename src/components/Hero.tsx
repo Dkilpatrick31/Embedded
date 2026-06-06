@@ -2,63 +2,121 @@
 
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 
-// ── Lightning types ───────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Bolt {
   path: [number, number][];
+  branches: Array<{ path: [number, number][]; widthMult: number }>;
   maxOpacity: number;
-  rgb: string;
   lineWidth: number;
   duration: number;
   startTime: number;
+  originX: number;
+  originY: number;
 }
+
+interface Rumble {
+  x: number;
+  y: number;
+  startTime: number;
+}
+
+const RUMBLE_DURATION = 800;
 
 // ── Bolt factory ──────────────────────────────────────────────────────────────
 
 function makeBolt(w: number, h: number, now: number): Bolt {
   const startX = w * (0.05 + Math.random() * 0.9);
-  const segments = 5 + Math.floor(Math.random() * 6);
-  const boltH = h * (0.2 + Math.random() * 0.45);
+  const segments = 6 + Math.floor(Math.random() * 5);
+  const boltH = h * (0.3 + Math.random() * 0.55);
   const segH = boltH / segments;
 
   const path: [number, number][] = [[startX, -4]];
   let cx = startX;
   for (let i = 0; i < segments; i++) {
-    cx = Math.max(8, Math.min(w - 8, cx + (Math.random() - 0.5) * w * 0.1));
+    cx = Math.max(8, Math.min(w - 8, cx + (Math.random() - 0.5) * w * 0.12));
     path.push([cx, (i + 1) * segH]);
   }
 
-  const distant = Math.random() > 0.35;
+  // 1-2 branch bolts splitting off the main path
+  const numBranches = 1 + Math.floor(Math.random() * 2);
+  const branches: Bolt["branches"] = [];
+  for (let b = 0; b < numBranches; b++) {
+    const branchIdx = 2 + Math.floor(Math.random() * Math.max(1, path.length - 4));
+    const [bx, by] = path[branchIdx];
+    const branchSegs = 3 + Math.floor(Math.random() * 3);
+    const branchPath: [number, number][] = [[bx, by]];
+    let bcx = bx;
+    const dir = Math.random() > 0.5 ? 1 : -1;
+    for (let i = 0; i < branchSegs; i++) {
+      bcx = Math.max(8, Math.min(w - 8, bcx + dir * (18 + Math.random() * 28) + (Math.random() - 0.5) * 16));
+      branchPath.push([bcx, by + (i + 1) * (segH * 0.75)]);
+    }
+    branches.push({ path: branchPath, widthMult: 0.35 + Math.random() * 0.3 });
+  }
+
+  const midIdx = Math.floor(path.length / 2);
+
   return {
     path,
-    maxOpacity: distant ? 0.1 + Math.random() * 0.1 : 0.22 + Math.random() * 0.18,
-    rgb: Math.random() > 0.4 ? "215,235,255" : "195,215,255",
-    lineWidth: distant ? 0.4 + Math.random() * 0.7 : 1.0 + Math.random() * 1.8,
-    duration: 320 + Math.random() * 280,
+    branches,
+    maxOpacity: 0.3 + Math.random() * 0.4,
+    lineWidth: 1.2 + Math.random() * 2.4,
+    duration: 260 + Math.random() * 320,
     startTime: now,
+    originX: startX,
+    originY: path[midIdx][1],
   };
 }
 
-// ── Canvas draw ───────────────────────────────────────────────────────────────
+// ── Draw helpers ──────────────────────────────────────────────────────────────
+
+function strokeSegments(ctx: CanvasRenderingContext2D, path: [number, number][], lw: number) {
+  ctx.lineWidth = lw;
+  ctx.shadowBlur = lw > 2 ? 18 : 10;
+  ctx.beginPath();
+  ctx.moveTo(path[0][0], path[0][1]);
+  for (let i = 1; i < path.length; i++) ctx.lineTo(path[i][0], path[i][1]);
+  ctx.stroke();
+}
 
 function drawBolt(ctx: CanvasRenderingContext2D, bolt: Bolt, opacity: number) {
   ctx.save();
-  ctx.strokeStyle = `rgba(${bolt.rgb},${opacity})`;
-  ctx.lineWidth = bolt.lineWidth;
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
-  ctx.shadowColor = `rgba(${bolt.rgb},${opacity * 0.5})`;
-  ctx.shadowBlur = bolt.lineWidth > 1 ? 12 : 6;
+  ctx.strokeStyle = `rgba(200,220,255,${opacity})`;
+  ctx.shadowColor = `rgba(200,220,255,${opacity * 0.65})`;
+  strokeSegments(ctx, bolt.path, bolt.lineWidth);
 
-  ctx.beginPath();
-  ctx.moveTo(bolt.path[0][0], bolt.path[0][1]);
-  for (let i = 1; i < bolt.path.length; i++) {
-    ctx.lineTo(bolt.path[i][0], bolt.path[i][1]);
+  for (const branch of bolt.branches) {
+    ctx.strokeStyle = `rgba(200,220,255,${opacity * 0.6})`;
+    ctx.shadowColor = `rgba(200,220,255,${opacity * 0.3})`;
+    strokeSegments(ctx, branch.path, bolt.lineWidth * branch.widthMult);
   }
-  ctx.stroke();
   ctx.restore();
+}
+
+function drawRumble(ctx: CanvasRenderingContext2D, rumble: Rumble, now: number): boolean {
+  const elapsed = now - rumble.startTime;
+  if (elapsed >= RUMBLE_DURATION) return false;
+  const t = elapsed / RUMBLE_DURATION;
+  const radius = t * 300;
+  const opacity = 0.08 * (1 - t);
+  const innerR = Math.max(0, radius - 50);
+
+  ctx.save();
+  const grd = ctx.createRadialGradient(rumble.x, rumble.y, innerR, rumble.x, rumble.y, radius);
+  grd.addColorStop(0, `rgba(255,255,255,${opacity})`);
+  grd.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = grd;
+  ctx.beginPath();
+  ctx.arc(rumble.x, rumble.y, radius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  return true;
 }
 
 // ── Hero ──────────────────────────────────────────────────────────────────────
@@ -73,11 +131,10 @@ export default function Hero() {
     const canvas = canvasRef.current;
     const section = sectionRef.current;
     if (!canvas || !section) return;
-
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // ── Resize canvas to match section ────────────────────────────────────────
+    // ── Resize ────────────────────────────────────────────────────────────────
     const resize = () => {
       canvas.width = section.offsetWidth;
       canvas.height = section.offsetHeight;
@@ -87,39 +144,49 @@ export default function Hero() {
 
     // ── State ─────────────────────────────────────────────────────────────────
     const activeBolts: Bolt[] = [];
+    const activeRumbles: Rumble[] = [];
     const timers: ReturnType<typeof setTimeout>[] = [];
     let rafId: number;
-    let alive = true;
+    let mounted = true;
 
-    // ── Ambient flicker via direct DOM style ──────────────────────────────────
+    // ── Flicker ───────────────────────────────────────────────────────────────
     const flicker = () => {
-      section.style.filter = "brightness(1.08)";
+      section.style.filter = "brightness(1.15)";
       section.style.transition = "none";
       const t = setTimeout(() => {
         section.style.filter = "brightness(1)";
-        section.style.transition = "filter 120ms ease";
-      }, 55);
+        section.style.transition = "filter 100ms ease";
+      }, 60);
       timers.push(t);
     };
 
-    // ── Schedule bolt strikes ─────────────────────────────────────────────────
-    const schedule = () => {
-      const delay = 2000 + Math.random() * 6000;
-      const t = setTimeout(() => {
-        if (!alive) return;
-
-        // 25% chance of a cluster (2-4 bolts in quick succession)
-        const count = Math.random() < 0.25 ? 2 + Math.floor(Math.random() * 3) : 1;
-        for (let i = 0; i < count; i++) {
-          const stagger = i * (80 + Math.random() * 140);
+    // ── Strike: fire a cluster of 3-6 bolts ───────────────────────────────────
+    const strike = () => {
+      const count = 3 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < count; i++) {
+        const stagger = i * (45 + Math.random() * 110);
+        const t = setTimeout(() => {
+          if (!mounted) return;
+          const bolt = makeBolt(canvas.width, canvas.height, performance.now());
+          activeBolts.push(bolt);
+          // Thunder rumble after brief delay
           const t2 = setTimeout(() => {
-            if (!alive) return;
-            activeBolts.push(makeBolt(canvas.width, canvas.height, performance.now()));
-          }, stagger);
+            if (!mounted) return;
+            activeRumbles.push({ x: bolt.originX, y: bolt.originY, startTime: performance.now() });
+          }, 120 + Math.random() * 280);
           timers.push(t2);
-        }
+        }, stagger);
+        timers.push(t);
+      }
+      flicker();
+    };
 
-        flicker();
+    // ── Schedule: 1-4 seconds between strikes ─────────────────────────────────
+    const schedule = () => {
+      const delay = 1000 + Math.random() * 3000;
+      const t = setTimeout(() => {
+        if (!mounted) return;
+        strike();
         schedule();
       }, delay);
       timers.push(t);
@@ -130,28 +197,17 @@ export default function Hero() {
     const loop = (now: number) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Horizon glow — very slow sine pulse at the bottom
-      const glowOpacity = ((Math.sin(now * 0.00045) + 1) / 2) * 0.055;
-      const glow = ctx.createRadialGradient(
-        canvas.width / 2, canvas.height * 1.05, 20,
-        canvas.width / 2, canvas.height * 1.05, canvas.width * 0.6
-      );
-      glow.addColorStop(0, `rgba(200,169,110,${glowOpacity})`);
-      glow.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Thunder rumbles (drawn first — they sit below bolts)
+      for (let i = activeRumbles.length - 1; i >= 0; i--) {
+        if (!drawRumble(ctx, activeRumbles[i], now)) activeRumbles.splice(i, 1);
+      }
 
-      // Active bolts — iterate in reverse so splice doesn't skip
+      // Lightning bolts
       for (let i = activeBolts.length - 1; i >= 0; i--) {
         const bolt = activeBolts[i];
         const elapsed = now - bolt.startTime;
-        if (elapsed >= bolt.duration) {
-          activeBolts.splice(i, 1);
-          continue;
-        }
-        // eased decay: fast at start, slow tail
-        const t = elapsed / bolt.duration;
-        const opacity = bolt.maxOpacity * Math.pow(1 - t, 1.4);
+        if (elapsed >= bolt.duration) { activeBolts.splice(i, 1); continue; }
+        const opacity = bolt.maxOpacity * Math.pow(1 - elapsed / bolt.duration, 1.3);
         drawBolt(ctx, bolt, opacity);
       }
 
@@ -161,7 +217,7 @@ export default function Hero() {
 
     // ── Cleanup ───────────────────────────────────────────────────────────────
     return () => {
-      alive = false;
+      mounted = false;
       cancelAnimationFrame(rafId);
       timers.forEach(clearTimeout);
       window.removeEventListener("resize", resize);
@@ -174,50 +230,41 @@ export default function Hero() {
     <section
       ref={sectionRef}
       className="relative w-full h-screen min-h-[600px] flex items-end overflow-hidden"
+      style={{ backgroundColor: "#000000" }}
     >
-      {/* Background */}
-      <div className="absolute inset-0" style={{ backgroundColor: "var(--surface)" }}>
-        {/* Grid overlay */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-5">
-          <svg width="100%" height="100%">
-            <defs>
-              <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
-                <path d="M 60 0 L 0 0 0 60" fill="none" stroke="currentColor" strokeWidth="0.5" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-          </svg>
-        </div>
-
-        {/* Horizon motif */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 opacity-10">
-          <div className="w-px h-32" style={{ backgroundColor: "var(--accent)" }} />
-          <div className="w-24 h-px" style={{ backgroundColor: "var(--accent)" }} />
-          <div className="w-px h-32" style={{ backgroundColor: "var(--accent)" }} />
-        </div>
-
-        {/* Altitude watermark */}
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[20vw] font-bold leading-none select-none opacity-[0.03] whitespace-nowrap"
-          style={{ fontFamily: "var(--font-rajdhani)", color: "var(--text)" }}
-        >
-          FL 410
-        </div>
-      </div>
-
-      {/* Storm canvas — sits above the static bg, below the gradient */}
+      {/* Layer 2: Lightning canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
 
-      {/* Gradient vignette */}
+      {/* Layer 3: Logo — centered atmospheric watermark */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+        <Image
+          src="/Embedded-Logo.jpeg"
+          alt=""
+          width={1254}
+          height={1254}
+          className="w-[220px] md:w-[320px] h-auto"
+          style={{ opacity: 0.40 }}
+          priority
+        />
+      </div>
+
+      {/* Layer 4: Vignette — dark edges, bottom fade to black */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "linear-gradient(to top, var(--bg) 0%, transparent 50%, rgba(0,0,0,0.2) 100%)",
+            "linear-gradient(to top, #000000 0%, rgba(0,0,0,0.15) 38%, rgba(0,0,0,0.55) 100%)",
+        }}
+      />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse at center, transparent 28%, rgba(0,0,0,0.6) 100%)",
         }}
       />
 
-      {/* Content */}
+      {/* Layer 5: Content */}
       <div className="relative z-10 w-full max-w-screen-2xl mx-auto px-6 lg:px-12 pb-16 md:pb-20">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
@@ -234,7 +281,7 @@ export default function Hero() {
 
           <h1
             className="text-5xl md:text-6xl lg:text-8xl font-bold uppercase leading-none mb-6"
-            style={{ fontFamily: "var(--font-rajdhani)", color: "var(--text)" }}
+            style={{ fontFamily: "var(--font-rajdhani)", color: "#ffffff" }}
           >
             Above
             <br />
@@ -243,7 +290,7 @@ export default function Hero() {
 
           <p
             className="text-sm leading-relaxed mb-8 max-w-md"
-            style={{ color: "var(--text-muted)", fontFamily: "var(--font-dm-sans)" }}
+            style={{ color: "rgba(255,255,255,0.55)", fontFamily: "var(--font-dm-sans)" }}
           >
             Precision-engineered garments for the cockpit and beyond. Where
             aviation heritage meets modern craft.
@@ -255,7 +302,7 @@ export default function Hero() {
               className="inline-block px-6 md:px-8 py-3.5 text-xs tracking-widest uppercase transition-opacity hover:opacity-80"
               style={{
                 backgroundColor: "var(--accent)",
-                color: "var(--bg)",
+                color: "#000000",
                 fontFamily: "var(--font-rajdhani)",
                 fontWeight: 600,
                 letterSpacing: "0.15em",
@@ -267,8 +314,8 @@ export default function Hero() {
               href="/about"
               className="inline-block px-6 md:px-8 py-3.5 text-xs tracking-widest uppercase transition-opacity hover:opacity-80"
               style={{
-                border: "1px solid var(--text)",
-                color: "var(--text)",
+                border: "1px solid rgba(255,255,255,0.45)",
+                color: "rgba(255,255,255,0.85)",
                 fontFamily: "var(--font-rajdhani)",
                 fontWeight: 600,
                 letterSpacing: "0.15em",
@@ -288,7 +335,7 @@ export default function Hero() {
         >
           <span
             className="text-[10px] tracking-widest uppercase rotate-90 origin-center"
-            style={{ color: "var(--text-muted)" }}
+            style={{ color: "rgba(255,255,255,0.35)" }}
           >
             Scroll
           </span>
