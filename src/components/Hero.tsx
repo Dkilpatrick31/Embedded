@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -94,14 +95,14 @@ function makeTree(w: number, h: number, now: number): BoltTree {
 
 // ── Three-pass bloom draw ─────────────────────────────────────────────────────
 
-function drawTree(ctx: CanvasRenderingContext2D, tree: BoltTree, opacity: number) {
+function drawTree(ctx: CanvasRenderingContext2D, tree: BoltTree, opacity: number, rgb: string) {
   ctx.save();
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
 
   // Pass 1 — outer bloom (batched, lw=8, very low opacity)
   ctx.lineWidth = 8;
-  ctx.strokeStyle = `rgba(${RGB},${opacity * 0.03})`;
+  ctx.strokeStyle = `rgba(${rgb},${opacity * 0.03})`;
   ctx.shadowBlur = 0;
   ctx.beginPath();
   for (const s of tree.segs) { ctx.moveTo(s.x1, s.y1); ctx.lineTo(s.x2, s.y2); }
@@ -109,16 +110,16 @@ function drawTree(ctx: CanvasRenderingContext2D, tree: BoltTree, opacity: number
 
   // Pass 2 — mid bloom (batched, lw=4)
   ctx.lineWidth = 4;
-  ctx.strokeStyle = `rgba(${RGB},${opacity * 0.08})`;
+  ctx.strokeStyle = `rgba(${rgb},${opacity * 0.08})`;
   ctx.beginPath();
   for (const s of tree.segs) { ctx.moveTo(s.x1, s.y1); ctx.lineTo(s.x2, s.y2); }
   ctx.stroke();
 
   // Pass 3 — core (individual, varying widths + soft shadow)
   ctx.shadowBlur = 6;
-  ctx.shadowColor = `rgba(${RGB},${opacity * 0.5})`;
+  ctx.shadowColor = `rgba(${rgb},${opacity * 0.5})`;
   for (const s of tree.segs) {
-    ctx.strokeStyle = `rgba(${RGB},${opacity * s.alphaMult})`;
+    ctx.strokeStyle = `rgba(${rgb},${opacity * s.alphaMult})`;
     ctx.lineWidth = s.coreWidth;
     ctx.beginPath();
     ctx.moveTo(s.x1, s.y1);
@@ -132,8 +133,18 @@ function drawTree(ctx: CanvasRenderingContext2D, tree: BoltTree, opacity: number
 // ── Hero ──────────────────────────────────────────────────────────────────────
 
 export default function Hero() {
+  const { theme } = useTheme();
+  const isLight = theme === "light";
+
   const sectionRef = useRef<HTMLElement>(null);
   const canvasRef  = useRef<HTMLCanvasElement>(null);
+  // Ref so the RAF loop always reads the latest bolt color without restarting
+  const rgbRef = useRef(RGB);
+
+  // Keep bolt color current — RAF loop reads rgbRef.current each frame
+  useEffect(() => {
+    rgbRef.current = isLight ? "20,40,120" : RGB;
+  }, [isLight]);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -200,7 +211,7 @@ export default function Hero() {
           ? tree.maxOpacity
           : tree.maxOpacity * (1 - (elapsed - tree.holdMs) / tree.fadeMs);
 
-        drawTree(ctx, tree, opacity);
+        drawTree(ctx, tree, opacity, rgbRef.current);
       }
 
       rafId = requestAnimationFrame(loop);
@@ -222,7 +233,7 @@ export default function Hero() {
     <section
       ref={sectionRef}
       className="relative w-full h-[calc(100svh-52px)] min-h-[560px] md:h-screen flex items-end overflow-hidden"
-      style={{ backgroundColor: "#000000" }}
+      style={{ backgroundColor: isLight ? "#F5F2ED" : "#000000" }}
     >
       {/* Layer 2: Lightning canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
@@ -235,24 +246,26 @@ export default function Hero() {
           width={1254}
           height={1254}
           className="w-[425px] md:w-[875px] h-auto"
-          style={{ opacity: 0.5, mixBlendMode: "screen" }}
+          style={{ opacity: 0.5, mixBlendMode: isLight ? "multiply" : "screen" }}
           priority
         />
       </div>
 
-      {/* Layer 4: Vignette — dark edges + bottom-to-black */}
+      {/* Layer 4: Vignette */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background:
-            "linear-gradient(to top, #000000 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.55) 100%)",
+          background: isLight
+            ? "linear-gradient(to top, #F5F2ED 0%, rgba(245,242,237,0.1) 40%, rgba(245,242,237,0.3) 100%)"
+            : "linear-gradient(to top, #000000 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.55) 100%)",
         }}
       />
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background:
-            "radial-gradient(ellipse at center, transparent 28%, rgba(0,0,0,0.6) 100%)",
+          background: isLight
+            ? "radial-gradient(ellipse at center, transparent 28%, rgba(245,242,237,0.4) 100%)"
+            : "radial-gradient(ellipse at center, transparent 28%, rgba(0,0,0,0.6) 100%)",
         }}
       />
 
@@ -266,14 +279,14 @@ export default function Hero() {
         >
           <p
             className="text-xs tracking-[0.3em] uppercase mb-2 md:mb-4"
-            style={{ color: "var(--accent)", fontFamily: "var(--font-rajdhani)" }}
+            style={{ color: isLight ? "#0A0A0A" : "var(--accent)", fontFamily: "var(--font-rajdhani)" }}
           >
             Spring / Summer 2025 Collection
           </p>
 
           <h1
             className="text-5xl md:text-6xl lg:text-8xl font-bold uppercase leading-none mb-3 md:mb-6"
-            style={{ fontFamily: "var(--font-rajdhani)", color: "#ffffff" }}
+            style={{ fontFamily: "var(--font-rajdhani)", color: isLight ? "#0A0A0A" : "#ffffff" }}
           >
             Above
             <br />
@@ -282,7 +295,7 @@ export default function Hero() {
 
           <p
             className="text-sm leading-relaxed mb-4 md:mb-8 max-w-md"
-            style={{ color: "rgba(255,255,255,0.55)", fontFamily: "var(--font-dm-sans)" }}
+            style={{ color: isLight ? "#444444" : "rgba(255,255,255,0.55)", fontFamily: "var(--font-dm-sans)" }}
           >
             Precision-engineered garments for the cockpit and beyond. Where
             aviation heritage meets modern craft.
@@ -293,8 +306,9 @@ export default function Hero() {
               href="/shop"
               className="inline-block px-6 md:px-8 py-3.5 text-xs tracking-widest uppercase transition-opacity hover:opacity-80"
               style={{
-                backgroundColor: "var(--accent)",
-                color: "#000000",
+                backgroundColor: isLight ? "#1A1A2E" : "var(--accent)",
+                color: isLight ? "#ffffff" : "#000000",
+                border: isLight ? "1px solid #1A1A2E" : undefined,
                 fontFamily: "var(--font-rajdhani)",
                 fontWeight: 600,
                 letterSpacing: "0.15em",
@@ -306,8 +320,8 @@ export default function Hero() {
               href="/about"
               className="inline-block px-6 md:px-8 py-3.5 text-xs tracking-widest uppercase transition-opacity hover:opacity-80"
               style={{
-                border: "1px solid rgba(255,255,255,0.45)",
-                color: "rgba(255,255,255,0.85)",
+                border: isLight ? "1px solid rgba(26,26,46,0.5)" : "1px solid rgba(255,255,255,0.45)",
+                color: isLight ? "#1A1A2E" : "rgba(255,255,255,0.85)",
                 fontFamily: "var(--font-rajdhani)",
                 fontWeight: 600,
                 letterSpacing: "0.15em",
@@ -327,7 +341,7 @@ export default function Hero() {
         >
           <span
             className="text-[10px] tracking-widest uppercase rotate-90 origin-center"
-            style={{ color: "rgba(255,255,255,0.35)" }}
+            style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)" }}
           >
             Scroll
           </span>
