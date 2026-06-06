@@ -246,28 +246,24 @@ export default function Hero() {
           width={1254}
           height={1254}
           className="w-[425px] md:w-[875px] h-auto"
-          style={{ opacity: 0.5, mixBlendMode: isLight ? "normal" : "screen" }}
+          style={{ opacity: isLight ? 1 : 0.5, mixBlendMode: isLight ? "multiply" : "screen" }}
           priority
         />
       </div>
 
       {/* Layer 4: Vignette */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: isLight
-            ? "linear-gradient(to top, #F5F2ED 0%, rgba(245,242,237,0.1) 40%, rgba(245,242,237,0.3) 100%)"
-            : "linear-gradient(to top, #000000 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.55) 100%)",
-        }}
-      />
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: isLight
-            ? "radial-gradient(ellipse at center, transparent 28%, rgba(245,242,237,0.4) 100%)"
-            : "radial-gradient(ellipse at center, transparent 28%, rgba(0,0,0,0.6) 100%)",
-        }}
-      />
+      {!isLight && (
+        <>
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "linear-gradient(to top, #000000 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.55) 100%)" }}
+          />
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "radial-gradient(ellipse at center, transparent 28%, rgba(0,0,0,0.6) 100%)" }}
+          />
+        </>
+      )}
 
       {/* Layer 5: Content */}
       <div className="relative z-10 w-full max-w-screen-2xl mx-auto px-6 lg:px-12 pb-6 md:pb-20">
