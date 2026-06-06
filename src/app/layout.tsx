@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { CartDrawerProvider } from "@/contexts/CartDrawerContext";
 import CartDrawer from "@/components/CartDrawer";
+import PageTransition from "@/components/PageTransition";
 import "./globals.css";
 
 const rajdhani = Rajdhani({
@@ -42,7 +43,7 @@ export default function RootLayout({
         <ThemeProvider>
           <CartProvider>
             <CartDrawerProvider>
-              {children}
+              <PageTransition>{children}</PageTransition>
               <CartDrawer />
             </CartDrawerProvider>
           </CartProvider>
