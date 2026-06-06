@@ -186,9 +186,10 @@ export default function Navbar() {
               <AccountIcon />
             </button>
 
-            <button
+            <Link
+              href="/cart"
               aria-label={`Cart (${totalItems})`}
-              className="relative opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+              className="relative opacity-70 hover:opacity-100 transition-opacity"
               style={{ color: "var(--text)" }}
             >
               <CartIcon />
@@ -207,7 +208,7 @@ export default function Navbar() {
                   </motion.span>
                 )}
               </AnimatePresence>
-            </button>
+            </Link>
           </div>
         </nav>
       </header>
