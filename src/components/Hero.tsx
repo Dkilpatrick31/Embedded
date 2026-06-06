@@ -7,183 +7,176 @@ import Link from "next/link";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-interface Bolt {
-  path: [number, number][];
-  branches: Array<{ path: [number, number][]; widthMult: number }>;
+interface Seg {
+  x1: number; y1: number;
+  x2: number; y2: number;
+  coreWidth: number;
+  alphaMult: number; // depth-based dimming for branches
+}
+
+interface BoltTree {
+  segs: Seg[];
   maxOpacity: number;
-  lineWidth: number;
-  duration: number;
   startTime: number;
-  originX: number;
-  originY: number;
+  holdMs: number; // ms at full brightness before fade
+  fadeMs: number; // ms to fade to zero
 }
 
-interface Rumble {
-  x: number;
-  y: number;
-  startTime: number;
+const RGB = "180,210,255";
+
+// ── Recursive midpoint-displacement bolt builder ───────────────────────────────
+
+function buildBolt(
+  x1: number, y1: number,
+  x2: number, y2: number,
+  roughness: number,
+  depth: number,
+  maxDepth: number,
+  out: Seg[],
+): void {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.sqrt(dx * dx + dy * dy);
+
+  if (depth >= maxDepth || len < 2) {
+    out.push({
+      x1, y1, x2, y2,
+      coreWidth: Math.max(0.3, 1.8 - depth * 0.2),
+      alphaMult: Math.max(0.15, 1 - depth * 0.09),
+    });
+    return;
+  }
+
+  // Perpendicular displacement of midpoint
+  const perpX = -dy / len;
+  const perpY = dx / len;
+  const disp = (Math.random() - 0.5) * len * roughness;
+  const mx = (x1 + x2) / 2 + perpX * disp;
+  const my = (y1 + y2) / 2 + perpY * disp;
+
+  buildBolt(x1, y1, mx, my, roughness * 0.6, depth + 1, maxDepth, out);
+  buildBolt(mx, my, x2, y2, roughness * 0.6, depth + 1, maxDepth, out);
+
+  // 30% chance to spawn a branch from the displaced midpoint
+  if (depth < maxDepth - 1 && Math.random() < 0.3) {
+    const mainAngle = Math.atan2(dy, dx);
+    const side = Math.random() > 0.5 ? 1 : -1;
+    const branchAngle = mainAngle + side * (0.26 + Math.random() * 0.35); // 15-35°
+    const branchLen = len * (0.35 + Math.random() * 0.4);
+    buildBolt(
+      mx, my,
+      mx + Math.cos(branchAngle) * branchLen,
+      my + Math.sin(branchAngle) * branchLen,
+      roughness * 0.5, depth + 2, maxDepth, out,
+    );
+  }
 }
 
-const RUMBLE_DURATION = 800;
+// ── Bolt tree factory: 2-4 trunks fired simultaneously ────────────────────────
 
-// ── Bolt factory ──────────────────────────────────────────────────────────────
-
-function makeBolt(w: number, h: number, now: number): Bolt {
-  const startX = w * (0.05 + Math.random() * 0.9);
-  const segments = 6 + Math.floor(Math.random() * 5);
-  const boltH = h * (0.3 + Math.random() * 0.55);
-  const segH = boltH / segments;
-
-  const path: [number, number][] = [[startX, -4]];
-  let cx = startX;
-  for (let i = 0; i < segments; i++) {
-    cx = Math.max(8, Math.min(w - 8, cx + (Math.random() - 0.5) * w * 0.12));
-    path.push([cx, (i + 1) * segH]);
+function makeTree(w: number, h: number, now: number): BoltTree {
+  const segs: Seg[] = [];
+  const trunks = 2 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < trunks; i++) {
+    const sx = w * (0.08 + Math.random() * 0.84);
+    const ex = Math.max(0, Math.min(w, sx + (Math.random() - 0.5) * w * 0.35));
+    const ey = h * (0.55 + Math.random() * 0.45);
+    buildBolt(sx, -2, ex, ey, 0.65, 0, 8, segs);
   }
-
-  // 1-2 branch bolts splitting off the main path
-  const numBranches = 1 + Math.floor(Math.random() * 2);
-  const branches: Bolt["branches"] = [];
-  for (let b = 0; b < numBranches; b++) {
-    const branchIdx = 2 + Math.floor(Math.random() * Math.max(1, path.length - 4));
-    const [bx, by] = path[branchIdx];
-    const branchSegs = 3 + Math.floor(Math.random() * 3);
-    const branchPath: [number, number][] = [[bx, by]];
-    let bcx = bx;
-    const dir = Math.random() > 0.5 ? 1 : -1;
-    for (let i = 0; i < branchSegs; i++) {
-      bcx = Math.max(8, Math.min(w - 8, bcx + dir * (18 + Math.random() * 28) + (Math.random() - 0.5) * 16));
-      branchPath.push([bcx, by + (i + 1) * (segH * 0.75)]);
-    }
-    branches.push({ path: branchPath, widthMult: 0.35 + Math.random() * 0.3 });
-  }
-
-  const midIdx = Math.floor(path.length / 2);
-
   return {
-    path,
-    branches,
-    maxOpacity: 0.3 + Math.random() * 0.4,
-    lineWidth: 1.2 + Math.random() * 2.4,
-    duration: 260 + Math.random() * 320,
+    segs,
+    maxOpacity: 0.65 + Math.random() * 0.35,
     startTime: now,
-    originX: startX,
-    originY: path[midIdx][1],
+    holdMs:  50 + Math.random() * 100,
+    fadeMs: 200 + Math.random() * 200,
   };
 }
 
-// ── Draw helpers ──────────────────────────────────────────────────────────────
+// ── Three-pass bloom draw ─────────────────────────────────────────────────────
 
-function strokeSegments(ctx: CanvasRenderingContext2D, path: [number, number][], lw: number) {
-  ctx.lineWidth = lw;
-  ctx.shadowBlur = lw > 2 ? 18 : 10;
-  ctx.beginPath();
-  ctx.moveTo(path[0][0], path[0][1]);
-  for (let i = 1; i < path.length; i++) ctx.lineTo(path[i][0], path[i][1]);
-  ctx.stroke();
-}
-
-function drawBolt(ctx: CanvasRenderingContext2D, bolt: Bolt, opacity: number) {
+function drawTree(ctx: CanvasRenderingContext2D, tree: BoltTree, opacity: number) {
   ctx.save();
-  ctx.lineJoin = "round";
   ctx.lineCap = "round";
-  ctx.strokeStyle = `rgba(200,220,255,${opacity})`;
-  ctx.shadowColor = `rgba(200,220,255,${opacity * 0.65})`;
-  strokeSegments(ctx, bolt.path, bolt.lineWidth);
+  ctx.lineJoin = "round";
 
-  for (const branch of bolt.branches) {
-    ctx.strokeStyle = `rgba(200,220,255,${opacity * 0.6})`;
-    ctx.shadowColor = `rgba(200,220,255,${opacity * 0.3})`;
-    strokeSegments(ctx, branch.path, bolt.lineWidth * branch.widthMult);
-  }
-  ctx.restore();
-}
-
-function drawRumble(ctx: CanvasRenderingContext2D, rumble: Rumble, now: number): boolean {
-  const elapsed = now - rumble.startTime;
-  if (elapsed >= RUMBLE_DURATION) return false;
-  const t = elapsed / RUMBLE_DURATION;
-  const radius = t * 300;
-  const opacity = 0.08 * (1 - t);
-  const innerR = Math.max(0, radius - 50);
-
-  ctx.save();
-  const grd = ctx.createRadialGradient(rumble.x, rumble.y, innerR, rumble.x, rumble.y, radius);
-  grd.addColorStop(0, `rgba(255,255,255,${opacity})`);
-  grd.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = grd;
+  // Pass 1 — outer bloom (batched, lw=8, very low opacity)
+  ctx.lineWidth = 8;
+  ctx.strokeStyle = `rgba(${RGB},${opacity * 0.03})`;
+  ctx.shadowBlur = 0;
   ctx.beginPath();
-  ctx.arc(rumble.x, rumble.y, radius, 0, Math.PI * 2);
-  ctx.fill();
+  for (const s of tree.segs) { ctx.moveTo(s.x1, s.y1); ctx.lineTo(s.x2, s.y2); }
+  ctx.stroke();
+
+  // Pass 2 — mid bloom (batched, lw=4)
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = `rgba(${RGB},${opacity * 0.08})`;
+  ctx.beginPath();
+  for (const s of tree.segs) { ctx.moveTo(s.x1, s.y1); ctx.lineTo(s.x2, s.y2); }
+  ctx.stroke();
+
+  // Pass 3 — core (individual, varying widths + soft shadow)
+  ctx.shadowBlur = 6;
+  ctx.shadowColor = `rgba(${RGB},${opacity * 0.5})`;
+  for (const s of tree.segs) {
+    ctx.strokeStyle = `rgba(${RGB},${opacity * s.alphaMult})`;
+    ctx.lineWidth = s.coreWidth;
+    ctx.beginPath();
+    ctx.moveTo(s.x1, s.y1);
+    ctx.lineTo(s.x2, s.y2);
+    ctx.stroke();
+  }
+
   ctx.restore();
-  return true;
 }
 
 // ── Hero ──────────────────────────────────────────────────────────────────────
 
 export default function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef  = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const canvas = canvasRef.current;
+    const canvas  = canvasRef.current;
     const section = sectionRef.current;
     if (!canvas || !section) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // ── Resize ────────────────────────────────────────────────────────────────
+    // ── Canvas resize ─────────────────────────────────────────────────────────
     const resize = () => {
-      canvas.width = section.offsetWidth;
+      canvas.width  = section.offsetWidth;
       canvas.height = section.offsetHeight;
     };
     resize();
     window.addEventListener("resize", resize);
 
-    // ── State ─────────────────────────────────────────────────────────────────
-    const activeBolts: Bolt[] = [];
-    const activeRumbles: Rumble[] = [];
+    const trees:  BoltTree[] = [];
     const timers: ReturnType<typeof setTimeout>[] = [];
     let rafId: number;
     let mounted = true;
 
-    // ── Flicker ───────────────────────────────────────────────────────────────
+    // ── Brightness flicker via direct DOM style ───────────────────────────────
     const flicker = () => {
-      section.style.filter = "brightness(1.15)";
+      section.style.filter = "brightness(1.2)";
       section.style.transition = "none";
       const t = setTimeout(() => {
         section.style.filter = "brightness(1)";
-        section.style.transition = "filter 100ms ease";
-      }, 60);
+        section.style.transition = "filter 80ms ease";
+      }, 40);
       timers.push(t);
     };
 
-    // ── Strike: fire a cluster of 3-6 bolts ───────────────────────────────────
+    // ── Strike: generate a new tree and flash ─────────────────────────────────
     const strike = () => {
-      const count = 3 + Math.floor(Math.random() * 4);
-      for (let i = 0; i < count; i++) {
-        const stagger = i * (45 + Math.random() * 110);
-        const t = setTimeout(() => {
-          if (!mounted) return;
-          const bolt = makeBolt(canvas.width, canvas.height, performance.now());
-          activeBolts.push(bolt);
-          // Thunder rumble after brief delay
-          const t2 = setTimeout(() => {
-            if (!mounted) return;
-            activeRumbles.push({ x: bolt.originX, y: bolt.originY, startTime: performance.now() });
-          }, 120 + Math.random() * 280);
-          timers.push(t2);
-        }, stagger);
-        timers.push(t);
-      }
+      trees.push(makeTree(canvas.width, canvas.height, performance.now()));
       flicker();
     };
 
-    // ── Schedule: 1-4 seconds between strikes ─────────────────────────────────
+    // ── Schedule: 1.5–4 seconds between strikes ───────────────────────────────
     const schedule = () => {
-      const delay = 1000 + Math.random() * 3000;
+      const delay = 1500 + Math.random() * 2500;
       const t = setTimeout(() => {
         if (!mounted) return;
         strike();
@@ -197,18 +190,17 @@ export default function Hero() {
     const loop = (now: number) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Thunder rumbles (drawn first — they sit below bolts)
-      for (let i = activeRumbles.length - 1; i >= 0; i--) {
-        if (!drawRumble(ctx, activeRumbles[i], now)) activeRumbles.splice(i, 1);
-      }
+      for (let i = trees.length - 1; i >= 0; i--) {
+        const tree = trees[i];
+        const elapsed = now - tree.startTime;
+        const total = tree.holdMs + tree.fadeMs;
+        if (elapsed >= total) { trees.splice(i, 1); continue; }
 
-      // Lightning bolts
-      for (let i = activeBolts.length - 1; i >= 0; i--) {
-        const bolt = activeBolts[i];
-        const elapsed = now - bolt.startTime;
-        if (elapsed >= bolt.duration) { activeBolts.splice(i, 1); continue; }
-        const opacity = bolt.maxOpacity * Math.pow(1 - elapsed / bolt.duration, 1.3);
-        drawBolt(ctx, bolt, opacity);
+        const opacity = elapsed < tree.holdMs
+          ? tree.maxOpacity
+          : tree.maxOpacity * (1 - (elapsed - tree.holdMs) / tree.fadeMs);
+
+        drawTree(ctx, tree, opacity);
       }
 
       rafId = requestAnimationFrame(loop);
@@ -235,25 +227,25 @@ export default function Hero() {
       {/* Layer 2: Lightning canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
 
-      {/* Layer 3: Logo — centered atmospheric watermark */}
+      {/* Layer 3: Logo — screen blend makes black pixels invisible */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
         <Image
           src="/Embedded-Logo.jpeg"
           alt=""
           width={1254}
           height={1254}
-          className="w-[220px] md:w-[320px] h-auto"
-          style={{ opacity: 0.40 }}
+          className="w-[340px] md:w-[700px] h-auto"
+          style={{ opacity: 0.5, mixBlendMode: "screen" }}
           priority
         />
       </div>
 
-      {/* Layer 4: Vignette — dark edges, bottom fade to black */}
+      {/* Layer 4: Vignette — dark edges + bottom-to-black */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "linear-gradient(to top, #000000 0%, rgba(0,0,0,0.15) 38%, rgba(0,0,0,0.55) 100%)",
+            "linear-gradient(to top, #000000 0%, rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.55) 100%)",
         }}
       />
       <div
