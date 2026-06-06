@@ -8,6 +8,11 @@ export const metadata: Metadata = {
     title: "About — Embedded",
     description: "Founded by pilots, for pilots. The story behind Embedded aviation clothing.",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "About — Embedded",
+    description: "Founded by pilots, for pilots. The story behind Embedded aviation clothing.",
+  },
 };
 
 export default function AboutPage() {

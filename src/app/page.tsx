@@ -12,6 +12,11 @@ export const metadata: Metadata = {
     title: "Embedded — Premium Aviation Pilot Clothing",
     description: "Precision-engineered garments for the cockpit and beyond. Where aviation heritage meets modern craft.",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Embedded — Premium Aviation Pilot Clothing",
+    description: "Precision-engineered garments for the cockpit and beyond. Where aviation heritage meets modern craft.",
+  },
 };
 
 export default function Home() {

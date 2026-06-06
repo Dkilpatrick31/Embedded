@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, type Variants } from "framer-motion";
+import { motion, MotionConfig, type Variants } from "framer-motion";
 import Link from "next/link";
 
 const collections = [
@@ -159,6 +159,7 @@ function CollectionCard({ collection }: { collection: typeof collections[0] }) {
 
 export default function FeaturedCollections() {
   return (
+    <MotionConfig reducedMotion="user">
     <section className="py-24 px-6 lg:px-12 max-w-screen-2xl mx-auto">
       {/* Section header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 md:mb-14">
@@ -208,5 +209,6 @@ export default function FeaturedCollections() {
         ))}
       </motion.div>
     </section>
+    </MotionConfig>
   );
 }

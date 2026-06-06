@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, type Variants } from "framer-motion";
+import { motion, MotionConfig, type Variants } from "framer-motion";
 import Link from "next/link";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import Navbar from "@/components/Navbar";
@@ -340,6 +340,7 @@ function EditorialBannerSection() {
 
 export default function AboutClient() {
   return (
+    <MotionConfig reducedMotion="user">
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: "var(--bg)" }}>
       <AnnouncementBar />
       <Navbar />
@@ -352,5 +353,6 @@ export default function AboutClient() {
       </main>
       <Footer />
     </div>
+    </MotionConfig>
   );
 }

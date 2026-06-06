@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { Rajdhani, DM_Sans } from "next/font/google";
-import { ThemeProvider } from "@/contexts/ThemeContext";
-import { CartProvider } from "@/contexts/CartContext";
-import { CartDrawerProvider } from "@/contexts/CartDrawerContext";
-import { WishlistProvider } from "@/contexts/WishlistContext";
+import AppProviders from "@/components/AppProviders";
 import CartDrawer from "@/components/CartDrawer";
 import PageTransition from "@/components/PageTransition";
 import "./globals.css";
@@ -23,16 +20,19 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://embedded.com"),
   title: "Embedded — Premium Aviation Pilot Clothing",
   description:
     "Engineered for those who operate above the clouds. Premium aviation-inspired clothing for the modern pilot.",
+  twitter: {
+    card: "summary_large_image",
+    title: "Embedded — Premium Aviation Pilot Clothing",
+    description:
+      "Engineered for those who operate above the clouds. Premium aviation-inspired clothing for the modern pilot.",
+  },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
@@ -41,16 +41,10 @@ export default function RootLayout({
       className={`${rajdhani.variable} ${dmSans.variable}`}
     >
       <body>
-        <ThemeProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <CartDrawerProvider>
-                <PageTransition>{children}</PageTransition>
-                <CartDrawer />
-              </CartDrawerProvider>
-            </WishlistProvider>
-          </CartProvider>
-        </ThemeProvider>
+        <AppProviders>
+          <PageTransition>{children}</PageTransition>
+          <CartDrawer />
+        </AppProviders>
       </body>
     </html>
   );

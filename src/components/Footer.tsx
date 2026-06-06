@@ -181,19 +181,21 @@ export default function Footer() {
 
         {/* Social icons */}
         <div className="flex items-center gap-4">
-          {["Instagram", "Twitter", "Pinterest"].map((social) => (
+          {[
+            { label: "Instagram", href: "https://instagram.com" },
+            { label: "Twitter",   href: "https://twitter.com" },
+            { label: "Pinterest", href: "https://pinterest.com" },
+          ].map(({ label, href }) => (
             <Link
-              key={social}
-              href="#"
-              aria-label={social}
+              key={label}
+              href={href}
+              aria-label={label}
+              target="_blank"
+              rel="noopener noreferrer"
               className="opacity-40 hover:opacity-80 transition-opacity text-xs tracking-widest uppercase"
-              style={{
-                color: "var(--text)",
-                fontFamily: "var(--font-rajdhani)",
-                fontWeight: 600,
-              }}
+              style={{ color: "var(--text)", fontFamily: "var(--font-rajdhani)", fontWeight: 600 }}
             >
-              {social.slice(0, 2)}
+              {label.slice(0, 2)}
             </Link>
           ))}
         </div>

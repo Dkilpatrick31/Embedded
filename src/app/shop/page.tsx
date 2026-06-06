@@ -10,6 +10,11 @@ export const metadata: Metadata = {
     title: "Shop All — Embedded",
     description: "Browse the full Embedded collection. Precision-engineered aviation pilot clothing.",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Shop All — Embedded",
+    description: "Browse the full Embedded collection. Precision-engineered aviation pilot clothing.",
+  },
 };
 
 function ShopSkeleton() {

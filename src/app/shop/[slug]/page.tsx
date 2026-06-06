@@ -24,6 +24,11 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       title: `${product.name} — Embedded`,
       description: product.description,
     },
+    twitter: {
+      card: "summary_large_image",
+      title: `${product.name} — Embedded`,
+      description: product.description,
+    },
   };
 }
 

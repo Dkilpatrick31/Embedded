@@ -42,6 +42,11 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       title: `${meta.label} Collection — Embedded`,
       description: meta.description,
     },
+    twitter: {
+      card: "summary_large_image",
+      title: `${meta.label} Collection — Embedded`,
+      description: meta.description,
+    },
   };
 }
 

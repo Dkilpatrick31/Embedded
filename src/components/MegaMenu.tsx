@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -104,21 +104,14 @@ const MENUS: Record<string, MenuData> = {
 // ── Hoverable link ────────────────────────────────────────────────────────────
 
 function NavMenuLink({ href, label, onClose }: MenuLink & { onClose: () => void }) {
-  const [hovered, setHovered] = useState(false);
   return (
     <Link
       href={href}
       onClick={onClose}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className="text-sm uppercase tracking-wide block transition-colors"
-      style={{
-        color: hovered ? "var(--accent)" : "var(--text)",
-        fontFamily: "var(--font-rajdhani)",
-        fontWeight: 600,
-        letterSpacing: "0.08em",
-        transition: "color 0.15s ease",
-      }}
+      className="text-sm uppercase tracking-wide block"
+      style={{ color: "var(--text)", fontFamily: "var(--font-rajdhani)", fontWeight: 600, letterSpacing: "0.08em", transition: "color 0.15s ease" }}
+      onMouseEnter={(e) => { e.currentTarget.style.color = "var(--accent)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text)"; }}
     >
       {label}
     </Link>
@@ -128,23 +121,35 @@ function NavMenuLink({ href, label, onClose }: MenuLink & { onClose: () => void 
 // ── Featured editorial card ───────────────────────────────────────────────────
 
 function FeaturedCard({ data, onClose }: { data: Featured; onClose: () => void }) {
-  const [hovered, setHovered] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleEnter = () => {
+    if (!cardRef.current) return;
+    cardRef.current.style.borderColor = "var(--accent)";
+    const shopNow = cardRef.current.querySelector<HTMLElement>(".shop-now-label");
+    if (shopNow) shopNow.style.color = "var(--text)";
+  };
+
+  const handleLeave = () => {
+    if (!cardRef.current) return;
+    cardRef.current.style.borderColor = "transparent";
+    const shopNow = cardRef.current.querySelector<HTMLElement>(".shop-now-label");
+    if (shopNow) shopNow.style.color = "var(--accent)";
+  };
+
   return (
     <Link
       href={data.href}
       onClick={onClose}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       className="block h-full"
       style={{ minHeight: "180px" }}
     >
       <div
+        ref={cardRef}
         className="relative overflow-hidden h-full flex flex-col justify-end p-5"
-        style={{
-          backgroundColor: "var(--surface)",
-          border: `1px solid ${hovered ? "var(--accent)" : "transparent"}`,
-          transition: "border-color 0.25s ease",
-        }}
+        style={{ backgroundColor: "var(--surface)", border: "1px solid transparent", transition: "border-color 0.25s ease" }}
+        onMouseEnter={handleEnter}
+        onMouseLeave={handleLeave}
       >
         {/* Grid texture */}
         <div className="absolute inset-0 opacity-[0.04] pointer-events-none">
@@ -199,13 +204,8 @@ function FeaturedCard({ data, onClose }: { data: Featured; onClose: () => void }
             {data.label}
           </p>
           <span
-            className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase"
-            style={{
-              color: hovered ? "var(--text)" : "var(--accent)",
-              fontFamily: "var(--font-rajdhani)",
-              fontWeight: 600,
-              transition: "color 0.15s ease",
-            }}
+            className="shop-now-label inline-flex items-center gap-1.5 text-[10px] tracking-[0.2em] uppercase"
+            style={{ color: "var(--accent)", fontFamily: "var(--font-rajdhani)", fontWeight: 600, transition: "color 0.15s ease" }}
           >
             Shop Now
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
