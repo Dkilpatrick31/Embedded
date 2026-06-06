@@ -1,19 +1,33 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { products } from "@/lib/products";
 import ProductDetailClient from "./ProductDetailClient";
+
+type Params = Promise<{ slug: string }>;
 
 export function generateStaticParams() {
   return products.map((p) => ({ slug: p.slug }));
 }
 
-export default async function ProductPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { slug } = await params;
+  const product = products.find((p) => p.slug === slug);
+  if (!product) return {};
+  return {
+    title: `${product.name} — Embedded`,
+    description: product.description,
+    openGraph: {
+      title: `${product.name} — Embedded`,
+      description: product.description,
+    },
+  };
+}
+
+export default async function ProductPage({ params }: { params: Params }) {
   const { slug } = await params;
   const product = products.find((p) => p.slug === slug);
 
@@ -24,7 +38,9 @@ export default async function ProductPage({
       <AnnouncementBar />
       <Navbar />
       <main className="flex-1 pt-16">
-        <ProductDetailClient product={product} />
+        <ErrorBoundary>
+          <ProductDetailClient product={product} />
+        </ErrorBoundary>
       </main>
       <Footer />
     </div>

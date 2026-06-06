@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
@@ -23,22 +23,24 @@ export default function ProductCard({ product }: { product: Product }) {
 
   const wishlisted = isWishlisted(product.id);
 
-  const handleQuickAdd = (e: React.MouseEvent) => {
+  const handleQuickAdd = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addItem({ id: product.id, name: product.name, price: product.price, size: product.sizes[0] });
-  };
+  }, [addItem, product]);
 
-  const handleWishlist = (e: React.MouseEvent) => {
+  const handleWishlist = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     toggleItem({ id: product.id, name: product.name, slug: product.slug, price: product.price, category: product.category });
-  };
+  }, [toggleItem, product]);
 
-  const collectionLabel = product.collection
-    .split("-")
-    .map((w) => w[0].toUpperCase() + w.slice(1))
-    .join(" ");
+  const collectionLabel = useMemo(() =>
+    product.collection
+      .split("-")
+      .map((w) => w[0].toUpperCase() + w.slice(1))
+      .join(" "),
+  [product.collection]);
 
   return (
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
