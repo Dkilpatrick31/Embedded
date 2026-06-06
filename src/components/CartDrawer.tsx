@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCart, type CartItem } from "@/contexts/CartContext";
@@ -122,16 +122,45 @@ function DrawerItem({ item }: { item: CartItem }) {
 
 // ── Drawer ────────────────────────────────────────────────────────────────────
 
+const FOCUSABLE =
+  'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
 export default function CartDrawer() {
   const { isOpen, closeDrawer } = useCartDrawer();
   const { items, totalItems, totalPrice } = useCart();
+  const drawerRef = useRef<HTMLDivElement>(null);
 
-  // Escape to close
+  // Focus trap + Escape to close
   useEffect(() => {
     if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeDrawer(); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    const prevFocus = document.activeElement as HTMLElement | null;
+    const drawer = drawerRef.current;
+
+    // Move focus into drawer on open
+    const firstFocusable = drawer?.querySelector<HTMLElement>(FOCUSABLE);
+    firstFocusable?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { closeDrawer(); return; }
+      if (e.key !== "Tab" || !drawer) return;
+
+      const focusables = Array.from(drawer.querySelectorAll<HTMLElement>(FOCUSABLE));
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      prevFocus?.focus();
+    };
   }, [isOpen, closeDrawer]);
 
   // Lock body scroll while open
@@ -158,6 +187,7 @@ export default function CartDrawer() {
 
           {/* Drawer panel */}
           <motion.div
+            ref={drawerRef}
             role="dialog"
             aria-modal="true"
             aria-label="Shopping bag"

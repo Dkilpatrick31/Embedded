@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/contexts/CartContext";
@@ -80,7 +80,38 @@ function Accordion({ title, children }: { title: string; children: React.ReactNo
 
 // ── Size guide modal ──────────────────────────────────────────────────────────
 
+const FOCUSABLE =
+  'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
 function SizeGuideModal({ onClose }: { onClose: () => void }) {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Focus trap
+  useEffect(() => {
+    const prevFocus = document.activeElement as HTMLElement | null;
+    const modal = modalRef.current;
+    modal?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { onClose(); return; }
+      if (e.key !== "Tab" || !modal) return;
+      const focusables = Array.from(modal.querySelectorAll<HTMLElement>(FOCUSABLE));
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      prevFocus?.focus();
+    };
+  }, [onClose]);
+
   return (
     <>
       <motion.div
@@ -91,9 +122,14 @@ function SizeGuideModal({ onClose }: { onClose: () => void }) {
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
         onClick={onClose}
+        aria-hidden="true"
       />
 
       <motion.div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Size guide"
         className="fixed inset-x-4 z-50 mx-auto overflow-y-auto"
         style={{
           top: "50%",
@@ -226,15 +262,15 @@ export default function ProductDetailClient({ product }: { product: Product }) {
   const [sizeModalOpen, setSizeModalOpen] = useState(false);
 
   const wishlisted = isWishlisted(product.id);
-  const handleWishlist = () => toggleItem({
-    id: product.id, name: product.name, slug: product.slug,
-    price: product.price, category: product.category,
-  });
+
+  const handleWishlist = useCallback(() => {
+    toggleItem({ id: product.id, name: product.name, slug: product.slug, price: product.price, category: product.category });
+  }, [toggleItem, product]);
 
   const collectionLabel =
     COLLECTIONS.find((c) => c.id === product.collection)?.label ?? product.collection;
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     if (!selectedSize) {
       setSizeError(true);
       return;
@@ -244,12 +280,12 @@ export default function ProductDetailClient({ product }: { product: Product }) {
     setAdded(true);
     setTimeout(() => setAdded(false), 2200);
     openDrawer();
-  };
+  }, [selectedSize, addItem, openDrawer, product]);
 
-  const handleSizeSelect = (size: string) => {
+  const handleSizeSelect = useCallback((size: string) => {
     setSelectedSize(size);
     setSizeError(false);
-  };
+  }, []);
 
   const related = products
     .filter((p) => p.id !== product.id && p.category === product.category)

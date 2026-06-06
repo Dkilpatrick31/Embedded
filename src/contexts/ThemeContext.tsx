@@ -29,7 +29,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const toggleTheme = () => {
     const next: Theme = theme === "dark" ? "light" : "dark";
     setTheme(next);
-    localStorage.setItem("embedded-theme", next);
+    try { localStorage.setItem("embedded-theme", next); } catch { /* quota / private mode */ }
     document.documentElement.setAttribute("data-theme", next);
   };
 

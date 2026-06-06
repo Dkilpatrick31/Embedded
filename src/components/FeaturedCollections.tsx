@@ -179,7 +179,7 @@ export default function FeaturedCollections() {
           </h2>
         </div>
         <Link
-          href="/collections"
+          href="/shop"
           className="inline-flex items-center gap-2 text-xs tracking-widest uppercase transition-opacity hover:opacity-60 self-start md:self-auto"
           style={{
             color: "var(--text)",

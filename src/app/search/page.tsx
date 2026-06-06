@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import SearchClient from "./SearchClient";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Search — Embedded",
+  description: "Search Embedded aviation pilot clothing by name, category, or collection.",
+  openGraph: {
+    title: "Search — Embedded",
+    description: "Search Embedded aviation pilot clothing by name, category, or collection.",
+  },
 };
 
 export default function SearchPage() {

@@ -47,7 +47,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!mounted) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch { /* quota / private mode */ }
   }, [items, mounted]);
 
   const addItem = (incoming: Omit<CartItem, "quantity">) => {
