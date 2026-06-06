@@ -233,7 +233,7 @@ export default function Hero() {
     <section
       ref={sectionRef}
       className="relative w-full h-[calc(100svh-52px)] min-h-[560px] md:h-screen flex items-end overflow-hidden"
-      style={{ backgroundColor: isLight ? "#F5F2ED" : "#000000" }}
+      style={{ backgroundColor: isLight ? "#FFFFFF" : "#000000" }}
     >
       {/* Layer 2: Lightning canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
