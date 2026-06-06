@@ -161,7 +161,7 @@ export default function CartDrawer() {
             role="dialog"
             aria-modal="true"
             aria-label="Shopping bag"
-            className="fixed top-0 right-0 bottom-0 z-[60] flex flex-col w-[320px] md:w-[400px]"
+            className="fixed top-0 right-0 bottom-0 z-[60] flex flex-col w-full md:w-[400px]"
             style={{
               backgroundColor: "var(--bg)",
               borderLeft: "1px solid var(--border)",
