@@ -238,15 +238,15 @@ export default function Hero() {
       {/* Layer 2: Lightning canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
 
-      {/* Layer 3: Logo — screen blend makes black pixels invisible */}
+      {/* Layer 3: Logo */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none -translate-y-[60px] md:-translate-y-[140px]">
         <Image
-          src="/Embedded-Logo.jpeg"
+          src={isLight ? "/Embedded-Lightmode-Logo.png" : "/Embedded-Logo.jpeg"}
           alt=""
           width={1254}
           height={1254}
           className="w-[425px] md:w-[875px] h-auto"
-          style={{ opacity: 0.5, mixBlendMode: isLight ? "multiply" : "screen" }}
+          style={{ opacity: 0.5, mixBlendMode: isLight ? "normal" : "screen" }}
           priority
         />
       </div>
