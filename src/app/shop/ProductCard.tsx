@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
+import { useCartDrawer } from "@/contexts/CartDrawerContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { type Product } from "@/lib/products";
 
@@ -18,6 +19,7 @@ function HeartIcon({ filled }: { filled: boolean }) {
 
 export default function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
+  const { openDrawer } = useCartDrawer();
   const { toggleItem, isWishlisted } = useWishlist();
   const [hovered, setHovered] = useState(false);
 
@@ -27,7 +29,8 @@ export default function ProductCard({ product }: { product: Product }) {
     e.preventDefault();
     e.stopPropagation();
     addItem({ id: product.id, name: product.name, price: product.price, size: product.sizes[0] });
-  }, [addItem, product]);
+    openDrawer();
+  }, [addItem, openDrawer, product]);
 
   const handleWishlist = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
